@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 9088764514323243914}
   - component: {fileID: -7248791203224548483}
   - component: {fileID: -1557219315178803828}
+  - component: {fileID: 1582432728246364423}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -133,3 +134,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UnitAuthoring
   maxHP: 5
   moveSpeed: 5
+--- !u!114 &1582432728246364423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4335088201849958969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d41b33ed5e460b4d81e1a5879ab6092, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BoxColliderAuthoring
+  size: {x: 1, y: 1}
+  offset: {x: 0, y: 0}
+  isStatic: 0
