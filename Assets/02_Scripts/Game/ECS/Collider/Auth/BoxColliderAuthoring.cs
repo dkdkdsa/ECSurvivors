@@ -30,7 +30,7 @@ public class BoxColliderAuthoring : MonoBehaviour
         Gizmos.color = isStatic ? new Color(0.3f, 0.8f, 1f, 0.8f)
                                  : new Color(0.3f, 1f, 0.3f, 0.8f);
 
-        var center = transform.position + (Vector3)(Vector2)offset;
+        var center = transform.position + (Vector3)offset;
         var size3 = new Vector3(size.x, size.y, 0.01f);
         Gizmos.DrawWireCube(center, size3);
     }
@@ -38,7 +38,7 @@ public class BoxColliderAuthoring : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        var center = transform.position + (Vector3)(Vector2)offset;
+        var center = transform.position + (Vector3)offset;
         var size3 = new Vector3(size.x, size.y, 0.01f);
         Gizmos.DrawWireCube(center, size3);
     }

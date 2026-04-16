@@ -14,8 +14,11 @@ public class UnitAuthoring : MonoBehaviour
             AddComponent(entity, new UnitComponent
             {
                 maxHP = authoring.maxHP,
+                currentHP = authoring.maxHP,
                 moveSpeed = authoring.moveSpeed,
             });
+
+            AddBuffer<DamageEvent>(entity);
         }
     }
 }

@@ -182,6 +182,7 @@ GameObject:
   - component: {fileID: 1077344884}
   - component: {fileID: 1077344883}
   - component: {fileID: 1077344888}
+  - component: {fileID: 1077344889}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -201,7 +202,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1355104f8f2d446a0f50ffa98c04bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitAuthoring
-  maxHP: 5
+  maxHP: 50
   moveSpeed: 5
 --- !u!114 &1077344884
 MonoBehaviour:
@@ -317,6 +318,20 @@ MonoBehaviour:
   size: {x: 1, y: 1}
   offset: {x: 0, y: 0}
   isStatic: 0
+--- !u!114 &1077344889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1077344882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06ca42b913df2614d85459dd0d68ae5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutoAttackAuthoring
+  prefab: {fileID: 2251051054662165899, guid: 689925aced36d2542a9d16e0ef7d5ce4, type: 3}
+  radius: 15
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
