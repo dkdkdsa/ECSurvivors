@@ -11,7 +11,7 @@ public partial struct PlayerSystem : ISystem
     {
         var input = SystemAPI.GetSingleton<InputData>();
         var dt = SystemAPI.Time.DeltaTime;
-        var move = new float2(input.Move.x, input.Move.y);
+        var move = new float3(input.Move.x, input.Move.y, 0);
 
         foreach (var (rigid, unit) in
             SystemAPI.Query<RefRW<RigidbodyComponent>, RefRO<UnitComponent>>().WithAll<PlayerTag>())

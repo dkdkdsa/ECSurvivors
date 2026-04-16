@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class RigidbodyAuthoring : MonoBehaviour
 {
-    public Vector2 initialVelocity;
+    public Vector3 initialVelocity;
 
     public class RigidbodyBaker : Baker<RigidbodyAuthoring>
     {
