@@ -4,16 +4,11 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[BurstCompile]
+//[BurstCompile]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 public partial struct RigidbodySystem : ISystem
 {
     public const float FixedDT = 1f/60f;
-
-    public void OnCreate(ref SystemState state)
-    {
-        state.RequireForUpdate<RigidbodyComponent>();
-    }
     
     public void OnUpdate(ref SystemState state)
     {

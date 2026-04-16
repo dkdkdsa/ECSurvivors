@@ -5,7 +5,7 @@ public class RigidbodyAuthoring : MonoBehaviour
 {
     public Vector2 initialVelocity;
 
-    public class Baker : Baker<RigidbodyAuthoring>
+    public class RigidbodyBaker : Baker<RigidbodyAuthoring>
     {
         public override void Bake(RigidbodyAuthoring authoring)
         {
