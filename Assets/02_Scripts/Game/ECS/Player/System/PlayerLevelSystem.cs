@@ -28,7 +28,7 @@ public partial struct PlayerLevelSystem : ISystem
         if(info.exp / info.needLevelUp > 0)
         {
             int remain = info.exp % info.needLevelUp;
-            info.level = info.exp / info.needLevelUp;
+            info.level += info.exp / info.needLevelUp;
 
             info.needLevelUp *= 2;
             info.exp = remain;

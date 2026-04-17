@@ -26,8 +26,8 @@ public class PlayerInfoBridge : MonoBehaviour
             _oldInfo = info;
         else if(!_oldInfo.Value.Equals(info))
         {
-            _oldInfo = info;
             OnPlayerInfoChanged?.Invoke(_oldInfo.Value, info);
+            _oldInfo = info;
         }
     }
 }
