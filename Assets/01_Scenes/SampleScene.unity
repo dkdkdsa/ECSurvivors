@@ -1120,6 +1120,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2024546521}
   - component: {fileID: 2024546522}
+  - component: {fileID: 2024546523}
   m_Layer: 5
   m_Name: LevelUpUI
   m_TagString: Untagged
@@ -1158,6 +1159,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd1275b2f9b280e48bef0312a73c9c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LevelUpUI
+  _datas:
+  - {fileID: 11400000, guid: 626590b1b8b79cf48928250689d8e896, type: 2}
+  - {fileID: 11400000, guid: 1eb9d293276750740ad84d84692ee24e, type: 2}
+  - {fileID: 11400000, guid: 995d8b47d5bc4c142bcd945d8373bc7a, type: 2}
+  - {fileID: 11400000, guid: 919246605cbf34143b84f8d5179e6632, type: 2}
+  - {fileID: 11400000, guid: 3a65d565062fa7142a595931a78e6dd8, type: 2}
+  _prefab: {fileID: 5170088412253160083, guid: a2b42cbe2241b1b48bef91bae2a7c107, type: 3}
+  _panelRoot: {fileID: 2024546521}
+--- !u!114 &2024546523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2024546520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.HorizontalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 4
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

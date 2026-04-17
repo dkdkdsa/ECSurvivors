@@ -10,40 +10,41 @@ using Unity.Transforms;
 [BurstCompile]
 public partial struct AutoAttackSystem : ISystem
 {
-    private EntityQuery enemyQuery;
-    private EntityQuery attackerQuery;
-    private ComponentLookup<BulletComponent> bulletLookup;
+    private EntityQuery _enemyQuery;
+    private EntityQuery _attackerQuery;
+    private ComponentLookup<BulletComponent> _bulletLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        enemyQuery = SystemAPI.QueryBuilder()
+        _enemyQuery = SystemAPI.QueryBuilder()
             .WithAll<EnemyTag, LocalTransform>()
             .Build();
 
-        attackerQuery = SystemAPI.QueryBuilder()
+        _attackerQuery = SystemAPI.QueryBuilder()
             .WithAll<AutoAttack, LocalTransform>()
             .Build();
 
-        bulletLookup = state.GetComponentLookup<BulletComponent>(isReadOnly: true);
+        _bulletLookup = state.GetComponentLookup<BulletComponent>(isReadOnly: true);
 
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
-        state.RequireForUpdate(attackerQuery);
-        state.RequireForUpdate(enemyQuery);
+        state.RequireForUpdate(_attackerQuery);
+        state.RequireForUpdate(_enemyQuery);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+
         float dt = SystemAPI.Time.DeltaTime;
 
         var tickJob = new TickCooldownJob { dt = dt };
         state.Dependency = tickJob.ScheduleParallel(state.Dependency);
 
-        var enemyTransforms = enemyQuery.ToComponentDataListAsync<LocalTransform>(
+        var enemyTransforms = _enemyQuery.ToComponentDataListAsync<LocalTransform>(
             state.WorldUpdateAllocator, state.Dependency, out var enemyFetchHandle);
 
-        bulletLookup.Update(ref state);
+        _bulletLookup.Update(ref state);
 
         var ecb = SystemAPI
             .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
@@ -53,7 +54,7 @@ public partial struct AutoAttackSystem : ISystem
         state.Dependency = new AttackJob
         {
             enemyTransforms = enemyTransforms.AsDeferredJobArray(),  // ← 여기
-            bulletLookup = bulletLookup,
+            bulletLookup = _bulletLookup,
             ecb = ecb
         }.ScheduleParallel(JobHandle.CombineDependencies(state.Dependency, enemyFetchHandle));
     }
