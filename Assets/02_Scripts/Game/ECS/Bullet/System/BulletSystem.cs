@@ -39,7 +39,14 @@ public partial struct BulletSystem : ISystem
                         amount = bullet.ValueRO.setup.damage
                     });
 
-                    ecb.DestroyEntity(entity);
+                    if(bullet.ValueRO.setup.penetCount > 0)
+                    {
+                        bullet.ValueRW.setup.penetCount--;
+                    }
+                    else
+                    {
+                        ecb.DestroyEntity(entity);
+                    }
 
                     break;
                 }

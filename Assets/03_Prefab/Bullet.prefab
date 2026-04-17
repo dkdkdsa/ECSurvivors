@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 84b2cfe0967b24520bab9b35b9cde6f5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d41b33ed5e460b4d81e1a5879ab6092, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoxColliderAuthoring
-  size: {x: 0.3, y: 0.3}
+  size: {x: 0.1, y: 0.1}
   offset: {x: 0, y: 0}
   isStatic: 0
   isTrigger: 1

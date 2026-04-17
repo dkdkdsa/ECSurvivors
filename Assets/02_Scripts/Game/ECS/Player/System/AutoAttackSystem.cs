@@ -1,50 +1,99 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 [UpdateAfter(typeof(RigidbodySystem))]
+[BurstCompile]
 public partial struct AutoAttackSystem : ISystem
 {
     private EntityQuery enemyQuery;
+    private EntityQuery attackerQuery;
+    private ComponentLookup<BulletComponent> bulletLookup;
 
+    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         enemyQuery = SystemAPI.QueryBuilder()
             .WithAll<EnemyTag, LocalTransform>()
             .Build();
 
-        state.RequireForUpdate<AutoAttack>();
+        attackerQuery = SystemAPI.QueryBuilder()
+            .WithAll<AutoAttack, LocalTransform>()
+            .Build();
+
+        bulletLookup = state.GetComponentLookup<BulletComponent>(isReadOnly: true);
+
+        state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        state.RequireForUpdate(attackerQuery);
         state.RequireForUpdate(enemyQuery);
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var enemyTransforms = enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
+        float dt = SystemAPI.Time.DeltaTime;
 
-        foreach (var (attack, transform) in
-                 SystemAPI.Query<RefRW<AutoAttack>, RefRO<LocalTransform>>())
+        var tickJob = new TickCooldownJob { dt = dt };
+        state.Dependency = tickJob.ScheduleParallel(state.Dependency);
+
+        var enemyTransforms = enemyQuery.ToComponentDataListAsync<LocalTransform>(
+            state.WorldUpdateAllocator, state.Dependency, out var enemyFetchHandle);
+
+        bulletLookup.Update(ref state);
+
+        var ecb = SystemAPI
+            .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+            .CreateCommandBuffer(state.WorldUnmanaged)
+            .AsParallelWriter();
+
+        state.Dependency = new AttackJob
         {
+            enemyTransforms = enemyTransforms.AsDeferredJobArray(),  // ← 여기
+            bulletLookup = bulletLookup,
+            ecb = ecb
+        }.ScheduleParallel(JobHandle.CombineDependencies(state.Dependency, enemyFetchHandle));
+    }
 
-            attack.ValueRW.currentInterval -= SystemAPI.Time.DeltaTime;
+    [BurstCompile]
+    partial struct TickCooldownJob : IJobEntity
+    {
+        public float dt;
 
-            if (attack.ValueRO.currentInterval > 0)
-                continue;
+        public void Execute(ref AutoAttack attack)
+        {
+            if (attack.currentInterval > 0f)
+                attack.currentInterval -= dt;
+        }
+    }
 
-            attack.ValueRW.currentInterval = attack.ValueRO.attackInterval;
+    [BurstCompile]
+    partial struct AttackJob : IJobEntity
+    {
+        [ReadOnly] public NativeArray<LocalTransform> enemyTransforms;
+        [ReadOnly] public ComponentLookup<BulletComponent> bulletLookup;
+        public EntityCommandBuffer.ParallelWriter ecb;
 
-            float3 myPos = transform.ValueRO.Position;
-            float radiusSq = attack.ValueRO.radius * attack.ValueRO.radius;
+        public void Execute(
+            [ChunkIndexInQuery] int sortKey,
+            ref AutoAttack attack,
+            in LocalTransform transform)
+        {
+            if (attack.currentInterval > 0f) return;
+            if (enemyTransforms.Length == 0) return;
+
+            float2 myPos = transform.Position.xy;
+            float radiusSq = attack.radius * attack.radius;
 
             int closestIdx = -1;
             float closestDistSq = radiusSq;
 
             for (int i = 0; i < enemyTransforms.Length; i++)
             {
-                float2 diff = enemyTransforms[i].Position.xy - myPos.xy;
+                float2 diff = enemyTransforms[i].Position.xy - myPos;
                 float distSq = math.lengthsq(diff);
 
                 if (distSq < closestDistSq)
@@ -54,26 +103,25 @@ public partial struct AutoAttackSystem : ISystem
                 }
             }
 
-            if (closestIdx < 0) continue;
+            if (closestIdx < 0) return;
+
+            attack.currentInterval = attack.attackInterval;
 
             float2 targetXY = enemyTransforms[closestIdx].Position.xy;
-            float2 dir2 = math.normalize(targetXY - myPos.xy);
+            float2 dir2 = math.normalize(targetXY - myPos);
 
-            var bulletData = SystemAPI.GetComponent<BulletComponent>(attack.ValueRO.prefab);
-            bulletData.dir = new float3(dir2.x, dir2.y, 0f);
-            bulletData.setup = attack.ValueRO.setup;
-            bulletData.lifeTime = attack.ValueRO.setup.lifeTime;
+            var bulletData = bulletLookup[attack.prefab];
+            bulletData.dir = new float3(dir2, 0f);
+            bulletData.setup = attack.setup;
+            bulletData.lifeTime = attack.setup.lifeTime;
 
-            var bullet = ecb.Instantiate(attack.ValueRO.prefab);
-            ecb.SetComponent(bullet,
-                LocalTransform.FromPositionRotationScale(myPos,
-                quaternion.identity,
-                bulletData.setup.size));
-            ecb.SetComponent(bullet, bulletData);
+            var bullet = ecb.Instantiate(sortKey, attack.prefab);
+            ecb.SetComponent(sortKey, bullet,
+                LocalTransform.FromPositionRotationScale(
+                    transform.Position,
+                    quaternion.identity,
+                    bulletData.setup.size));
+            ecb.SetComponent(sortKey, bullet, bulletData);
         }
-
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
-        enemyTransforms.Dispose();
     }
 }

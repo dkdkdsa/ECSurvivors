@@ -7,6 +7,7 @@ public struct BulletSetup
     public float lifeTime;
     public float moveSpeed;
     public float size;
+    public int penetCount;
 }
 
 public struct AutoAttack : IComponentData

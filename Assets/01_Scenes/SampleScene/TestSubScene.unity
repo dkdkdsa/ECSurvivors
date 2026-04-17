@@ -149,9 +149,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnerAuthoring
   enemyPrefab: {fileID: 4335088201849958969, guid: c6323e467a52544478f9ffcbdc012074, type: 3}
-  radius: 16
-  tick: 1
-  spawnPerTick: 10
+  radius: 30
+  tick: 0.7
+  spawnPerTick: 100
   randomSeed: 0
 --- !u!4 &304987448
 Transform:
@@ -333,12 +333,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AutoAttackAuthoring
   prefab: {fileID: 2251051054662165899, guid: 689925aced36d2542a9d16e0ef7d5ce4, type: 3}
   radius: 15
-  interval: 0.1
+  interval: 0.06
   setup:
     damage: 50
     lifeTime: 3
     moveSpeed: 15
-    size: 1
+    size: 3
+    penetCount: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

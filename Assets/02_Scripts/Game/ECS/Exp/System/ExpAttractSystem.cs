@@ -31,10 +31,11 @@ public partial struct ExpAttractSystem : ISystem
         public float2 playerPos;
         public float dt;
 
-        private const float Acceleration = 20f;
+        private const float FollowStrength = 12f;
         private const float MaxSpeed = 25f;
+        private const float SlowDownDistance = 1.5f;
 
-        void Execute(
+        public void Execute(
             ref RigidbodyComponent rb,
             in LocalTransform transform)
         {
@@ -42,18 +43,28 @@ public partial struct ExpAttractSystem : ISystem
             float2 toPlayer = playerPos - pos;
             float distSq = math.lengthsq(toPlayer);
 
-            if (distSq < 0.0001f) return;
+            if (distSq < 0.0001f)
+            {
+                rb.velocity = new float3(0f, 0f, rb.velocity.z);
+                return;
+            }
 
-            float2 dir = toPlayer / math.sqrt(distSq);
+            float dist = math.sqrt(distSq);
+            float2 dir = toPlayer / dist;
             float2 vel2 = rb.velocity.xy;
 
-            vel2 += dir * Acceleration * dt;
+            float targetSpeed = MaxSpeed;
 
-            float speedSq = math.lengthsq(vel2);
-            if (speedSq > MaxSpeed * MaxSpeed)
+            if (dist < SlowDownDistance)
             {
-                vel2 = vel2 / math.sqrt(speedSq) * MaxSpeed;
+                float ratio = dist / SlowDownDistance;
+                targetSpeed *= math.saturate(ratio);
             }
+
+            float2 desiredVel = dir * targetSpeed;
+
+            float t = math.saturate(FollowStrength * dt);
+            vel2 = math.lerp(vel2, desiredVel, t);
 
             rb.velocity = new float3(vel2, rb.velocity.z);
         }

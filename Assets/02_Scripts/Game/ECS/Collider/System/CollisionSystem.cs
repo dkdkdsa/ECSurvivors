@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
@@ -9,45 +10,64 @@ using Unity.Transforms;
 [BurstCompile]
 public partial struct CollisionSystem : ISystem
 {
-    private EntityQuery colliderQuery;
+    private EntityQuery _colliderQuery;
 
+    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        colliderQuery = SystemAPI.QueryBuilder()
+        _colliderQuery = SystemAPI.QueryBuilder()
             .WithAll<BoxColliderComponent, LocalTransform>()
             .Build();
 
-        state.RequireForUpdate(colliderQuery);
-    }
-
-    public void OnUpdate(ref SystemState state)
-    {
-        var entities = colliderQuery.ToEntityArray(Allocator.TempJob);
-        var colliders = colliderQuery.ToComponentDataArray<BoxColliderComponent>(Allocator.TempJob);
-        var transforms = colliderQuery.ToComponentDataArray<LocalTransform>(Allocator.TempJob);
-
-        var job = new DetectAndResolveJob
-        {
-            entities = entities,
-            colliders = colliders,
-            transforms = transforms
-        };
-
-        state.Dependency = job.ScheduleParallel(state.Dependency);
-
-        entities.Dispose(state.Dependency);
-        colliders.Dispose(state.Dependency);
-        transforms.Dispose(state.Dependency);
+        state.RequireForUpdate(_colliderQuery);
     }
 
     [BurstCompile]
-    public partial struct DetectAndResolveJob : IJobEntity
+    public void OnUpdate(ref SystemState state)
+    {
+        int count = _colliderQuery.CalculateEntityCount();
+        if (count == 0) return;
+
+        var alloc = state.WorldUpdateAllocator;
+
+        var entities = _colliderQuery.ToEntityArray(alloc);
+        var colliders = _colliderQuery.ToComponentDataArray<BoxColliderComponent>(alloc);
+        var transforms = _colliderQuery.ToComponentDataArray<LocalTransform>(alloc);
+
+        const float cellSize = 2f;
+
+        var grid = new NativeParallelMultiHashMap<int2, int>(count * 4, alloc);
+
+        var buildJob = new BuildGridJob
+        {
+            transforms = transforms,
+            colliders = colliders,
+            cellSize = cellSize,
+            grid = grid.AsParallelWriter()
+        }.Schedule(count, 64, state.Dependency);
+
+        var detectJob = new DetectAndResolveJob
+        {
+            entities = entities,
+            colliders = colliders,
+            transforms = transforms,
+            grid = grid,
+            cellSize = cellSize
+        };
+
+        state.Dependency = detectJob.ScheduleParallel(buildJob);
+    }
+
+    [BurstCompile]
+    partial struct DetectAndResolveJob : IJobEntity
     {
         [ReadOnly] public NativeArray<Entity> entities;
         [ReadOnly] public NativeArray<BoxColliderComponent> colliders;
         [ReadOnly] public NativeArray<LocalTransform> transforms;
+        [ReadOnly] public NativeParallelMultiHashMap<int2, int> grid;
+        public float cellSize;
 
-        private void Execute(
+        void Execute(
             Entity entity,
             ref LocalTransform transform,
             in BoxColliderComponent collider,
@@ -62,58 +82,101 @@ public partial struct CollisionSystem : ISystem
 
             float2 pushAccum = float2.zero;
 
-            for (int i = 0; i < entities.Length; i++)
+            int2 minCell = (int2)math.floor(aMin / cellSize);
+            int2 maxCell = (int2)math.floor(aMax / cellSize);
+
+            for (int cy = minCell.y; cy <= maxCell.y; cy++)
             {
-                if (entities[i] == entity) continue;
-
-                var otherCollider = colliders[i];
-                var otherTransform = transforms[i];
-
-                float2 bCenter = otherTransform.Position.xy + otherCollider.offset;
-                float2 bHalf = otherCollider.size * 0.5f;
-                float2 bMin = bCenter - bHalf;
-                float2 bMax = bCenter + bHalf;
-
-                if (aMax.x <= bMin.x || aMin.x >= bMax.x) continue;
-                if (aMax.y <= bMin.y || aMin.y >= bMax.y) continue;
-
-                float overlapX = math.min(aMax.x, bMax.x) - math.max(aMin.x, bMin.x);
-                float overlapY = math.min(aMax.y, bMax.y) - math.max(aMin.y, bMin.y);
-
-                float2 normal;
-                float penetration;
-
-                if (overlapX < overlapY)
+                for (int cx = minCell.x; cx <= maxCell.x; cx++)
                 {
-                    float dir = aCenter.x < bCenter.x ? -1f : 1f;
-                    normal = new float2(dir, 0f);
-                    penetration = overlapX;
-                }
-                else
-                {
-                    float dir = aCenter.y < bCenter.y ? -1f : 1f;
-                    normal = new float2(0f, dir);
-                    penetration = overlapY;
-                }
+                    var cell = new int2(cx, cy);
+                    if (!grid.TryGetFirstValue(cell, out int i, out var it)) continue;
 
-                bool isTriggerEvent = collider.isTrigger || otherCollider.isTrigger;
+                    do
+                    {
+                        if (entities[i] == entity) continue;
 
-                buffer.Add(new CollisionEvent
-                {
-                    other = entities[i],
-                    normal = normal,
-                    penetration = penetration,
-                    isTrigger = isTriggerEvent
-                });
+                        var otherCollider = colliders[i];
+                        float2 bCenter = transforms[i].Position.xy + otherCollider.offset;
+                        float2 bHalf = otherCollider.size * 0.5f;
 
-                if (!collider.isStatic && !isTriggerEvent)
-                {
-                    float pushRatio = otherCollider.isStatic ? 1f : 0.5f;
-                    pushAccum += normal * penetration * pushRatio;
+                        int2 bMinCell = (int2)math.floor((bCenter - bHalf) / cellSize);
+                        int2 overlapMin = math.max(minCell, bMinCell);
+                        if (cx != overlapMin.x || cy != overlapMin.y) continue;
+
+                        float2 bMin = bCenter - bHalf;
+                        float2 bMax = bCenter + bHalf;
+
+                        if (aMax.x <= bMin.x || aMin.x >= bMax.x) continue;
+                        if (aMax.y <= bMin.y || aMin.y >= bMax.y) continue;
+
+                        float overlapX = math.min(aMax.x, bMax.x) - math.max(aMin.x, bMin.x);
+                        float overlapY = math.min(aMax.y, bMax.y) - math.max(aMin.y, bMin.y);
+
+                        float2 normal;
+                        float penetration;
+
+                        if (overlapX < overlapY)
+                        {
+                            float dir = aCenter.x < bCenter.x ? -1f : 1f;
+                            normal = new float2(dir, 0f);
+                            penetration = overlapX;
+                        }
+                        else
+                        {
+                            float dir = aCenter.y < bCenter.y ? -1f : 1f;
+                            normal = new float2(0f, dir);
+                            penetration = overlapY;
+                        }
+
+                        bool isTriggerEvent = collider.isTrigger || otherCollider.isTrigger;
+
+                        buffer.Add(new CollisionEvent
+                        {
+                            other = entities[i],
+                            normal = normal,
+                            penetration = penetration,
+                            isTrigger = isTriggerEvent
+                        });
+
+                        // 트리거면 push 스킵
+                        if (!collider.isStatic && !isTriggerEvent)
+                        {
+                            float pushRatio = otherCollider.isStatic ? 1f : 0.5f;
+                            pushAccum += normal * penetration * pushRatio;
+                        }
+
+                    } while (grid.TryGetNextValue(out i, ref it));
                 }
             }
 
             transform.Position += new float3(pushAccum, 0f);
+        }
+    }
+
+    [BurstCompile]
+    struct BuildGridJob : IJobParallelFor
+    {
+        [ReadOnly] public NativeArray<LocalTransform> transforms;
+        [ReadOnly] public NativeArray<BoxColliderComponent> colliders;
+        public float cellSize;
+        public NativeParallelMultiHashMap<int2, int>.ParallelWriter grid;
+
+        public void Execute(int index)
+        {
+            float2 center = transforms[index].Position.xy + colliders[index].offset;
+            float2 half = colliders[index].size * 0.5f;
+
+            int2 min = (int2)math.floor((center - half) / cellSize);
+            int2 max = (int2)math.floor((center + half) / cellSize);
+
+            for (int y = min.y; y <= max.y; y++)
+            {
+                for (int x = min.x; x <= max.x; x++)
+                {
+                    grid.Add(new int2(x, y), index);
+                }
+            }
         }
     }
 }
