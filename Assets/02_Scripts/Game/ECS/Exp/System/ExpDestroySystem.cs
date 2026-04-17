@@ -10,6 +10,8 @@ public partial struct ExpDestroySystem : ISystem
     public void OnUpdate(ref SystemState state)
     {
         var ecb = new EntityCommandBuffer(Allocator.Temp);
+        var info = SystemAPI.GetSingleton<PlayerInfo>();
+
 
         foreach(var (_, buffer, entity) in SystemAPI.Query<
             RefRO<ExpTag>,
@@ -19,11 +21,14 @@ public partial struct ExpDestroySystem : ISystem
             {
                 if (SystemAPI.HasComponent<PlayerTag>(item.other))
                 {
+                    info.exp++;
                     ecb.DestroyEntity(entity);
                     break;
                 }
             }
         }
+
+        SystemAPI.SetSingleton<PlayerInfo>(info);
 
         ecb.Playback(state.EntityManager);
         ecb.Dispose();
