@@ -23,6 +23,8 @@ public partial struct HPSystem : ISystem
             {
                 ecb.DestroyEntity(entity);
             }
+
+            buffer.Clear();
         }
 
         ecb.Playback(state.EntityManager);

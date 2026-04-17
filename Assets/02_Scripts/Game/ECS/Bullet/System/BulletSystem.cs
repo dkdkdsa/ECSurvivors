@@ -17,7 +17,7 @@ public partial struct BulletSystem : ISystem
             RefRW<RigidbodyComponent>,
             DynamicBuffer<CollisionEvent>>().WithEntityAccess())
         {
-            rigid.ValueRW.velocity = bullet.ValueRO.dir * bullet.ValueRO.moveSpeed;
+            rigid.ValueRW.velocity = bullet.ValueRO.dir * bullet.ValueRO.setup.moveSpeed;
             bullet.ValueRW.lifeTime -= SystemAPI.Time.DeltaTime;
 
             if (bullet.ValueRO.lifeTime <= 0f)
@@ -36,10 +36,10 @@ public partial struct BulletSystem : ISystem
                     var buffer = lookup[target];
                     buffer.Add(new DamageEvent
                     {
-                        amount = bullet.ValueRO.damage
+                        amount = bullet.ValueRO.setup.damage
                     });
 
-                    ecb.DestroyEntity(target);
+                    ecb.DestroyEntity(entity);
 
                     break;
                 }

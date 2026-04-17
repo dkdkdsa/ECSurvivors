@@ -96,14 +96,17 @@ public partial struct CollisionSystem : ISystem
                     penetration = overlapY;
                 }
 
+                bool isTriggerEvent = collider.isTrigger || otherCollider.isTrigger;
+
                 buffer.Add(new CollisionEvent
                 {
                     other = entities[i],
                     normal = normal,
-                    penetration = penetration
+                    penetration = penetration,
+                    isTrigger = isTriggerEvent
                 });
 
-                if (!collider.isStatic)
+                if (!collider.isStatic && !isTriggerEvent)
                 {
                     float pushRatio = otherCollider.isStatic ? 1f : 0.5f;
                     pushAccum += normal * penetration * pushRatio;

@@ -3,8 +3,7 @@ using Unity.Mathematics;
 
 public struct BulletComponent : IComponentData
 {
-    public float damage;
+    public BulletSetup setup;
     public float lifeTime;
-    public float moveSpeed;
     public float3 dir;
 }

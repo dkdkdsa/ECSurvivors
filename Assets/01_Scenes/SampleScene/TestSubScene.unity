@@ -318,6 +318,7 @@ MonoBehaviour:
   size: {x: 1, y: 1}
   offset: {x: 0, y: 0}
   isStatic: 0
+  isTrigger: 0
 --- !u!114 &1077344889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,6 +333,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AutoAttackAuthoring
   prefab: {fileID: 2251051054662165899, guid: 689925aced36d2542a9d16e0ef7d5ce4, type: 3}
   radius: 15
+  interval: 0.1
+  setup:
+    damage: 1
+    lifeTime: 3
+    moveSpeed: 15
+    size: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

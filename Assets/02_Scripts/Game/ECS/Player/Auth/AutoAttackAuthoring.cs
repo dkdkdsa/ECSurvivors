@@ -5,6 +5,8 @@ public class AutoAttackAuthoring : MonoBehaviour
 {
     public GameObject prefab;
     public float radius;
+    public float interval;
+    public BulletSetup setup;
 
     public class Baker : Baker<AutoAttackAuthoring>
     {
@@ -15,6 +17,9 @@ public class AutoAttackAuthoring : MonoBehaviour
             AddComponent<AutoAttack>(entity, new AutoAttack
             {
                 prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic),
+                attackInterval = authoring.interval,
+                currentInterval = authoring.interval,
+                setup = authoring.setup,
                 radius = authoring.radius,
             });
         }

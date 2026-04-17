@@ -132,8 +132,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1355104f8f2d446a0f50ffa98c04bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitAuthoring
-  maxHP: 5
-  moveSpeed: 5
+  maxHP: 50
+  moveSpeed: 2
 --- !u!114 &1582432728246364423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,3 +149,4 @@ MonoBehaviour:
   size: {x: 1, y: 1}
   offset: {x: 0, y: 0}
   isStatic: 0
+  isTrigger: 0
