@@ -1,27 +1,30 @@
 using Unity.Entities;
 using UnityEngine;
 
-public partial class InputSystem : SystemBase
+namespace Game.ECS
 {
-    private PlayerInputActions _actions;
-
-    protected override void OnCreate()
+    public partial class InputSystem : SystemBase
     {
-        EntityManager.CreateSingleton<InputData>();
-        _actions = new PlayerInputActions();
-        _actions.Enable();
-    }
+        private PlayerInputActions _actions;
 
-    protected override void OnDestroy()
-    {
-        _actions.Dispose();
-    }
-
-    protected override void OnUpdate()
-    {
-        SystemAPI.SetSingleton(new InputData
+        protected override void OnCreate()
         {
-            Move = _actions.Player.Move.ReadValue<Vector2>(),
-        });
+            EntityManager.CreateSingleton<InputData>();
+            _actions = new PlayerInputActions();
+            _actions.Enable();
+        }
+
+        protected override void OnDestroy()
+        {
+            _actions.Dispose();
+        }
+
+        protected override void OnUpdate()
+        {
+            SystemAPI.SetSingleton(new InputData
+            {
+                Move = _actions.Player.Move.ReadValue<Vector2>(),
+            });
+        }
     }
 }

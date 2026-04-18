@@ -1,7 +1,10 @@
 using Unity.Entities;
 
-public struct DropTable : IComponentData
+namespace Game.ECS
 {
-    public Entity prefab;
-    public int dropCount;
+    public struct DropTable : IComponentData
+    {
+        public Entity prefab;
+        public int dropCount;
+    }
 }

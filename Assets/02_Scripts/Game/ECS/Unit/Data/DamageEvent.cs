@@ -1,8 +1,11 @@
 using Unity.Entities;
 using UnityEngine;
 
-[InternalBufferCapacity(4)]
-public partial struct DamageEvent : IBufferElementData
+namespace Game.ECS
 {
-    public float amount;
+    [InternalBufferCapacity(4)]
+    public partial struct DamageEvent : IBufferElementData
+    {
+        public float amount;
+    }
 }

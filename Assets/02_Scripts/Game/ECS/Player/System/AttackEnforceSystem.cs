@@ -2,36 +2,39 @@ using Unity.Burst;
 using Unity.Entities;
 using UnityEngine;
 
-[BurstCompile]
-public partial struct AttackEnforceSystem : ISystem
+namespace Game.ECS
 {
-    public void OnUpdate(ref SystemState state)
+    [BurstCompile]
+    public partial struct AttackEnforceSystem : ISystem
     {
-        foreach(var item in SystemAPI.Query<RefRW<AutoAttack>>())
+        public void OnUpdate(ref SystemState state)
         {
-            foreach(var data in EnforceDataQ.Get())
+            foreach (var item in SystemAPI.Query<RefRW<AutoAttack>>())
             {
-                switch (data.type)
+                foreach (var data in EnforceDataQ.Get())
                 {
-                    case EnforceType.BulletSize:
-                        item.ValueRW.setup.size += data.value;
-                        break;
-                    case EnforceType.PenetCount:
-                        item.ValueRW.setup.penetCount += (int)data.value;
-                        break;
-                    case EnforceType.BulletSpeed:
-                        item.ValueRW.setup.moveSpeed += data.value;
-                        break;
-                    case EnforceType.Damage:
-                        item.ValueRW.setup.damage += data.value;
-                        break;
-                    case EnforceType.LifeTime:
-                        item.ValueRW.setup.lifeTime += data.value;
-                        break;
+                    switch (data.type)
+                    {
+                        case EnforceType.BulletSize:
+                            item.ValueRW.setup.size += data.value;
+                            break;
+                        case EnforceType.PenetCount:
+                            item.ValueRW.setup.penetCount += (int)data.value;
+                            break;
+                        case EnforceType.BulletSpeed:
+                            item.ValueRW.setup.moveSpeed += data.value;
+                            break;
+                        case EnforceType.Damage:
+                            item.ValueRW.setup.damage += data.value;
+                            break;
+                        case EnforceType.LifeTime:
+                            item.ValueRW.setup.lifeTime += data.value;
+                            break;
+                    }
                 }
             }
-        }
 
-        EnforceDataQ.Clear();
+            EnforceDataQ.Clear();
+        }
     }
 }

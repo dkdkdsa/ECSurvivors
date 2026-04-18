@@ -1,51 +1,53 @@
-using System.Linq;
-using Unity.Entities;
+using Game.ECS;
 using UnityEngine;
 
-public class LevelUpUI : MonoBehaviour
+namespace Game.UI
 {
-    [SerializeField] private LevelUpUIData[] _datas;
-    [SerializeField] private LevelUpUIPanel _prefab;
-    [SerializeField] private Transform _panelRoot;
-
-    private void Awake()
+    public class LevelUpUI : MonoBehaviour
     {
-        EnforceDataQ.Clear();
-    }
+        [SerializeField] private LevelUpUIData[] _datas;
+        [SerializeField] private LevelUpUIPanel _prefab;
+        [SerializeField] private Transform _panelRoot;
 
-    public void OnPlayerInfoChanged(PlayerInfo oldInfo, PlayerInfo newInfo)
-    {
-        if(oldInfo.level != newInfo.level)
+        private void Awake()
         {
-            Time.timeScale = 0;
+            EnforceDataQ.Clear();
+        }
 
-            for(int i = 0; i < 3; i++)
+        public void OnPlayerInfoChanged(PlayerInfo oldInfo, PlayerInfo newInfo)
+        {
+            if (oldInfo.level != newInfo.level)
             {
-                var panel = Instantiate(_prefab, _panelRoot);
-                panel.Init(_datas[Random.Range(0, _datas.Length)], Callback);
+                Time.timeScale = 0;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    var panel = Instantiate(_prefab, _panelRoot);
+                    panel.Init(_datas[Random.Range(0, _datas.Length)], Callback);
+                }
             }
         }
-    }
 
-    private void Callback(LevelUpUIData data)
-    {
-        EnforceDataQ.Enqueue(data.data);
-
-        Time.timeScale = 1;
-
-        int childCount = _panelRoot.childCount;
-
-        for(int i = 0; i < childCount; i++)
+        private void Callback(LevelUpUIData data)
         {
-            Destroy(_panelRoot.GetChild(i).gameObject);
-        }
-    }
+            EnforceDataQ.Enqueue(data.data);
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.K))
-        {
             Time.timeScale = 1;
+
+            int childCount = _panelRoot.childCount;
+
+            for (int i = 0; i < childCount; i++)
+            {
+                Destroy(_panelRoot.GetChild(i).gameObject);
+            }
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                Time.timeScale = 1;
+            }
         }
     }
 }

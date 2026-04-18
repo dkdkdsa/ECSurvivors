@@ -1,5 +1,8 @@
 using Unity.Entities;
 
-public struct EnemyTag : IComponentData
+namespace Game.ECS
 {
+    public struct EnemyTag : IComponentData
+    {
+    }
 }

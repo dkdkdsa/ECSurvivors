@@ -1,7 +1,10 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-public struct InputData : IComponentData
+namespace Game.ECS
 {
-    public float2 Move;
+    public struct InputData : IComponentData
+    {
+        public float2 Move;
+    }
 }

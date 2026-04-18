@@ -1,15 +1,18 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class EnemyAuthoring : MonoBehaviour
+namespace Game.ECS
 {
-    public class Baker : Baker<EnemyAuthoring>
+    public class EnemyAuthoring : MonoBehaviour
     {
-        public override void Bake(EnemyAuthoring authoring)
+        public class Baker : Baker<EnemyAuthoring>
         {
-            var entity = GetEntity(TransformUsageFlags.Dynamic);
+            public override void Bake(EnemyAuthoring authoring)
+            {
+                var entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent<EnemyTag>(entity);
+                AddComponent<EnemyTag>(entity);
+            }
         }
     }
 }

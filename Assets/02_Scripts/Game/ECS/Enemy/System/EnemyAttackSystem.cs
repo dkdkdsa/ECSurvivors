@@ -2,54 +2,73 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(CollisionSystem))]
-[BurstCompile]
-public partial struct EnemyAttackSystem : ISystem
+namespace Game.ECS
 {
-    private BufferLookup<DamageEvent> _damageLookup;
-    private ComponentLookup<PlayerTag> _playerTagLookup;
-
-    public void OnCreate(ref SystemState state)
-    {
-        _damageLookup = state.GetBufferLookup<DamageEvent>();
-        _playerTagLookup = state.GetComponentLookup<PlayerTag>(true);
-    }
-
+    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    [UpdateAfter(typeof(CollisionSystem))]
     [BurstCompile]
-    public void OnUpdate(ref SystemState state)
+    public partial struct EnemyAttackSystem : ISystem
     {
-        _damageLookup.Update(ref state);
-        _playerTagLookup.Update(ref state);
+        private const float AttackDamage = 1f;
 
-        state.Dependency = new EnemyAttackJob
+        private ComponentLookup<PlayerTag> _playerTagLookup;
+        private BufferLookup<DamageEvent> _damageBufferLookup;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
         {
-            damageLookup = _damageLookup,
-            playerTagLookup = _playerTagLookup
-        }.ScheduleParallel(state.Dependency);
-    }
+            _playerTagLookup = state.GetComponentLookup<PlayerTag>(true);
+            _damageBufferLookup = state.GetBufferLookup<DamageEvent>(true);
 
-    [BurstCompile]
-    [WithAll(typeof(EnemyTag))]
-    public partial struct EnemyAttackJob : IJobEntity
-    {
-        [NativeDisableParallelForRestriction]
-        public BufferLookup<DamageEvent> damageLookup;
+            state.RequireForUpdate<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
+        }
 
-        [ReadOnly] public ComponentLookup<PlayerTag> playerTagLookup;
-
-        public void Execute(in DynamicBuffer<CollisionEvent> buffer)
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
         {
-            for (int i = 0; i < buffer.Length; i++)
+            _playerTagLookup.Update(ref state);
+            _damageBufferLookup.Update(ref state);
+
+            var ecbSingleton = SystemAPI.GetSingleton<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
+            var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
+
+            state.Dependency = new EnemyAttackJob
             {
-                var evt = buffer[i];
+                damage = AttackDamage,
+                playerTagLookup = _playerTagLookup,
+                damageBufferLookup = _damageBufferLookup,
+                ecb = ecb
+            }.ScheduleParallel(state.Dependency);
+        }
 
-                if (evt.isTrigger) continue;
-                if (!playerTagLookup.HasComponent(evt.other)) continue;
-                if (!damageLookup.HasBuffer(evt.other)) continue;
+        [BurstCompile]
+        [WithAll(typeof(EnemyTag))]
+        private partial struct EnemyAttackJob : IJobEntity
+        {
+            public float damage;
 
-                var targetBuffer = damageLookup[evt.other];
-                targetBuffer.Add(new DamageEvent { amount = 1f });
+            [ReadOnly] public ComponentLookup<PlayerTag> playerTagLookup;
+            [ReadOnly] public BufferLookup<DamageEvent> damageBufferLookup;
+
+            public EntityCommandBuffer.ParallelWriter ecb;
+
+            private void Execute(
+                [ChunkIndexInQuery] int sortKey,
+                in DynamicBuffer<CollisionEvent> buffer)
+            {
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    var evt = buffer[i];
+
+                    if (evt.isTrigger) continue;
+                    if (!playerTagLookup.HasComponent(evt.other)) continue;
+                    if (!damageBufferLookup.HasBuffer(evt.other)) continue;
+
+                    ecb.AppendToBuffer(sortKey, evt.other, new DamageEvent
+                    {
+                        amount = damage
+                    });
+                }
             }
         }
     }

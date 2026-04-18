@@ -1,8 +1,11 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "SO/LevelUpUIData")]
-public class LevelUpUIData : ScriptableObject
+namespace Game.UI
 {
-    public BulletEnforceData data;
-    public string expText;
+    [CreateAssetMenu(menuName = "SO/LevelUpUIData")]
+    public class LevelUpUIData : ScriptableObject
+    {
+        public BulletEnforceData data;
+        public string expText;
+    }
 }

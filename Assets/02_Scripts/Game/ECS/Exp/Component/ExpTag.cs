@@ -1,7 +1,10 @@
 using Unity.Entities;
 using UnityEngine;
 
-public struct ExpTag : IComponentData
+namespace Game.ECS
 {
+    public struct ExpTag : IComponentData
+    {
 
+    }
 }

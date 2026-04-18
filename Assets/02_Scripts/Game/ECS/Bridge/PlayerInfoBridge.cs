@@ -2,32 +2,36 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class PlayerInfoBridge : MonoBehaviour
+namespace Game.ECS
 {
-    private EntityQuery _query;
-    private PlayerInfo? _oldInfo;
-
-    public UnityEvent<PlayerInfo,PlayerInfo> OnPlayerInfoChanged;
-
-    private void Awake()
+    public class PlayerInfoBridge : MonoBehaviour
     {
-        var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-        _query = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerInfo>());
-    }
+        private EntityQuery _query;
+        private PlayerInfo? _oldInfo;
 
-    private void Update()
-    {
-        if (_query.IsEmpty) 
-            return;
+        public UnityEvent<PlayerInfo, PlayerInfo> OnPlayerInfoChanged;
 
-        var info = _query.GetSingleton<PlayerInfo>();
-
-        if(_oldInfo == null)
-            _oldInfo = info;
-        else if(!_oldInfo.Value.Equals(info))
+        private void Awake()
         {
-            OnPlayerInfoChanged?.Invoke(_oldInfo.Value, info);
-            _oldInfo = info;
+            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
+            _query = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerInfo>());
+        }
+
+        private void Update()
+        {
+            if (_query.IsEmpty)
+                return;
+
+            var info = _query.GetSingleton<PlayerInfo>();
+
+            if (_oldInfo == null)
+                _oldInfo = info;
+            else if (!_oldInfo.Value.Equals(info))
+            {
+                OnPlayerInfoChanged?.Invoke(_oldInfo.Value, info);
+                _oldInfo = info;
+            }
         }
     }
+
 }

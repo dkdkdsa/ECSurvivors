@@ -1,11 +1,14 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-[InternalBufferCapacity(8)]
-public struct CollisionEvent : IBufferElementData
+namespace Game.ECS
 {
-    public Entity other;
-    public float2 normal;
-    public float penetration;
-    public bool isTrigger;
+    [InternalBufferCapacity(8)]
+    public struct CollisionEvent : IBufferElementData
+    {
+        public Entity other;
+        public float2 normal;
+        public float penetration;
+        public bool isTrigger;
+    }
 }

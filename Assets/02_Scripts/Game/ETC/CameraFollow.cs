@@ -1,10 +1,13 @@
 using UnityEngine;
 
-public class CameraFollow : MonoBehaviour
+namespace Game.ETC
 {
-    public void OnPlayerPosition(Vector3 pos)
+    public class CameraFollow : MonoBehaviour
     {
-        pos.z = -10;
-        transform.position = pos;
+        public void OnPlayerPosition(Vector3 pos)
+        {
+            pos.z = -10;
+            transform.position = pos;
+        }
     }
 }

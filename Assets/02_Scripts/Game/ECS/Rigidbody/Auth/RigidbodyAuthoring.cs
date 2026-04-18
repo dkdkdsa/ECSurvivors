@@ -3,28 +3,31 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-public struct BaseRotation : IComponentData
+namespace Game.ECS
 {
-    public quaternion Value;
-}
-
-
-public class RigidbodyAuthoring : MonoBehaviour
-{
-    public Vector3 initialVelocity;
-
-    public class RigidbodyBaker : Baker<RigidbodyAuthoring>
+    public struct BaseRotation : IComponentData
     {
-        public override void Bake(RigidbodyAuthoring authoring)
+        public quaternion Value;
+    }
+
+
+    public class RigidbodyAuthoring : MonoBehaviour
+    {
+        public Vector3 initialVelocity;
+
+        public class RigidbodyBaker : Baker<RigidbodyAuthoring>
         {
-            var entity = GetEntity(TransformUsageFlags.Dynamic);
-
-            AddComponent(entity, new RigidbodyComponent
+            public override void Bake(RigidbodyAuthoring authoring)
             {
-                velocity = authoring.initialVelocity,
-            });
+                var entity = GetEntity(TransformUsageFlags.Dynamic);
 
-            AddComponent<BaseRotation>(entity);
+                AddComponent(entity, new RigidbodyComponent
+                {
+                    velocity = authoring.initialVelocity,
+                });
+
+                AddComponent<BaseRotation>(entity);
+            }
         }
     }
 }

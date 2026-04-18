@@ -1,14 +1,17 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class ExpAuthoring : MonoBehaviour
+namespace Game.ECS
 {
-    public class Baker : Baker<ExpAuthoring>
+    public class ExpAuthoring : MonoBehaviour
     {
-        public override void Bake(ExpAuthoring authoring)
+        public class Baker : Baker<ExpAuthoring>
         {
-            var entity = GetEntity(TransformUsageFlags.Dynamic);
-            AddComponent<ExpTag>(entity);
+            public override void Bake(ExpAuthoring authoring)
+            {
+                var entity = GetEntity(TransformUsageFlags.Dynamic);
+                AddComponent<ExpTag>(entity);
+            }
         }
     }
 }

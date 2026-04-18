@@ -2,29 +2,32 @@ using Unity.Entities;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-public class EnemySpawnerAuthoring : MonoBehaviour
+namespace Game.ECS
 {
-    public GameObject enemyPrefab;
-    public float radius;
-    public float tick;
-    public int spawnPerTick;
-    public uint randomSeed;
-
-    public class Baker : Baker<EnemySpawnerAuthoring>
+    public class EnemySpawnerAuthoring : MonoBehaviour
     {
-        public override void Bake(EnemySpawnerAuthoring authoring)
-        {
-            var entity = GetEntity(TransformUsageFlags.None);
+        public GameObject enemyPrefab;
+        public float radius;
+        public float tick;
+        public int spawnPerTick;
+        public uint randomSeed;
 
-            AddComponent(entity, new EnemySpawner
+        public class Baker : Baker<EnemySpawnerAuthoring>
+        {
+            public override void Bake(EnemySpawnerAuthoring authoring)
             {
-                prefab = GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic),
-                radius = authoring.radius,
-                tick = authoring.tick,
-                timer = 0f,
-                spawnPerTick = authoring.spawnPerTick,
-                random = Random.CreateFromIndex(authoring.randomSeed)
-            });
+                var entity = GetEntity(TransformUsageFlags.None);
+
+                AddComponent(entity, new EnemySpawner
+                {
+                    prefab = GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic),
+                    radius = authoring.radius,
+                    tick = authoring.tick,
+                    timer = 0f,
+                    spawnPerTick = authoring.spawnPerTick,
+                    random = Random.CreateFromIndex(authoring.randomSeed)
+                });
+            }
         }
     }
 }

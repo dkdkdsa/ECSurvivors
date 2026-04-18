@@ -1,3 +1,6 @@
 using Unity.Entities;
 
-public struct PlayerTag : IComponentData { }
+namespace Game.ECS
+{
+    public struct PlayerTag : IComponentData { }
+}

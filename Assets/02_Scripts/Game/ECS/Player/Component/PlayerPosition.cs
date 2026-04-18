@@ -1,7 +1,10 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-public struct PlayerPosition : IComponentData
+namespace Game.ECS
 {
-    public float3 Value;
+    public struct PlayerPosition : IComponentData
+    {
+        public float3 Value;
+    }
 }

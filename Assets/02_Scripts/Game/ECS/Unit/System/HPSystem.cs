@@ -3,68 +3,71 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[BurstCompile]
-public partial struct HPSystem : ISystem
+namespace Game.ECS
 {
-    private ComponentLookup<DropTable> dropTableLookup;
-
-    public void OnCreate(ref SystemState state)
-    {
-        state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
-        dropTableLookup = state.GetComponentLookup<DropTable>(isReadOnly: true);
-    }
-
-    public void OnUpdate(ref SystemState state)
-    {
-        dropTableLookup.Update(ref state);
-
-        var ecb = SystemAPI
-            .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
-            .CreateCommandBuffer(state.WorldUnmanaged)
-            .AsParallelWriter();
-
-        state.Dependency = new HPJob
-        {
-            ecb = ecb,
-            dropTableLookup = dropTableLookup
-        }.ScheduleParallel(state.Dependency);
-    }
-
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
-    partial struct HPJob : IJobEntity
+    public partial struct HPSystem : ISystem
     {
-        public EntityCommandBuffer.ParallelWriter ecb;
-        [ReadOnly] public ComponentLookup<DropTable> dropTableLookup;
+        private ComponentLookup<DropTable> dropTableLookup;
 
-        public void Execute(
-            [ChunkIndexInQuery] int sortKey,
-            Entity entity,
-            ref UnitComponent unit,
-            ref DynamicBuffer<DamageEvent> buffer,
-            in LocalTransform transform)
+        public void OnCreate(ref SystemState state)
         {
-            for (int i = 0; i < buffer.Length; i++)
-            {
-                unit.currentHP -= buffer[i].amount;
-            }
-            buffer.Clear();
+            state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+            dropTableLookup = state.GetComponentLookup<DropTable>(isReadOnly: true);
+        }
 
-            if (unit.currentHP > 0) return;
+        public void OnUpdate(ref SystemState state)
+        {
+            dropTableLookup.Update(ref state);
 
-            if (dropTableLookup.HasComponent(entity))
+            var ecb = SystemAPI
+                .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+                .CreateCommandBuffer(state.WorldUnmanaged)
+                .AsParallelWriter();
+
+            state.Dependency = new HPJob
             {
-                var table = dropTableLookup[entity];
-                var eventEntity = ecb.CreateEntity(sortKey);
-                ecb.AddComponent(sortKey, eventEntity, new DropEvent
+                ecb = ecb,
+                dropTableLookup = dropTableLookup
+            }.ScheduleParallel(state.Dependency);
+        }
+
+        [BurstCompile]
+        partial struct HPJob : IJobEntity
+        {
+            public EntityCommandBuffer.ParallelWriter ecb;
+            [ReadOnly] public ComponentLookup<DropTable> dropTableLookup;
+
+            public void Execute(
+                [ChunkIndexInQuery] int sortKey,
+                Entity entity,
+                ref UnitComponent unit,
+                ref DynamicBuffer<DamageEvent> buffer,
+                in LocalTransform transform)
+            {
+                for (int i = 0; i < buffer.Length; i++)
                 {
-                    dropCount = table.dropCount,
-                    prefab = table.prefab,
-                    position = transform.Position
-                });
-            }
+                    unit.currentHP -= buffer[i].amount;
+                }
+                buffer.Clear();
 
-            ecb.DestroyEntity(sortKey, entity);
+                if (unit.currentHP > 0) return;
+
+                if (dropTableLookup.HasComponent(entity))
+                {
+                    var table = dropTableLookup[entity];
+                    var eventEntity = ecb.CreateEntity(sortKey);
+                    ecb.AddComponent(sortKey, eventEntity, new DropEvent
+                    {
+                        dropCount = table.dropCount,
+                        prefab = table.prefab,
+                        position = transform.Position
+                    });
+                }
+
+                ecb.DestroyEntity(sortKey, entity);
+            }
         }
     }
 }

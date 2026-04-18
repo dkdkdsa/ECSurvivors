@@ -1,38 +1,40 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
-using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-public partial struct DropSystem : ISystem
+namespace Game.ECS
 {
-    private Random _random;
-
-    public void OnCreate(ref SystemState state)
+    public partial struct DropSystem : ISystem
     {
-        _random = new Random(123);
-    }
+        private Random _random;
 
-    public void OnUpdate(ref SystemState state)
-    {
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
-
-        foreach(var (evt, entity) in SystemAPI.Query<
-            RefRO<DropEvent>>().WithEntityAccess())
+        public void OnCreate(ref SystemState state)
         {
-            for(int i = 0; i < evt.ValueRO.dropCount; i++)
-            {
-                var dir = _random.NextFloat3Direction();
-                var pos = evt.ValueRO.position + dir;
-
-                var exp = ecb.Instantiate(evt.ValueRO.prefab);
-                ecb.SetComponent(exp, LocalTransform.FromPosition(pos));
-            }
-
-            ecb.DestroyEntity(entity);
+            _random = new Random(123);
         }
 
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
+        public void OnUpdate(ref SystemState state)
+        {
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+            foreach (var (evt, entity) in SystemAPI.Query<
+                RefRO<DropEvent>>().WithEntityAccess())
+            {
+                for (int i = 0; i < evt.ValueRO.dropCount; i++)
+                {
+                    var dir = _random.NextFloat3Direction();
+                    var pos = evt.ValueRO.position + dir;
+
+                    var exp = ecb.Instantiate(evt.ValueRO.prefab);
+                    ecb.SetComponent(exp, LocalTransform.FromPosition(pos));
+                }
+
+                ecb.DestroyEntity(entity);
+            }
+
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
     }
 }

@@ -1,36 +1,39 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
-[UpdateAfter(typeof(CollisionSystem))]
-[BurstCompile]
-public partial struct ExpDestroySystem : ISystem
+namespace Game.ECS
 {
-    public void OnUpdate(ref SystemState state)
+    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    [UpdateAfter(typeof(CollisionSystem))]
+    [BurstCompile]
+    public partial struct ExpDestroySystem : ISystem
     {
-        var ecb = new EntityCommandBuffer(Allocator.Temp);
-        var info = SystemAPI.GetSingleton<PlayerInfo>();
-
-
-        foreach(var (_, buffer, entity) in SystemAPI.Query<
-            RefRO<ExpTag>,
-            DynamicBuffer<CollisionEvent>>().WithEntityAccess())
+        public void OnUpdate(ref SystemState state)
         {
-            foreach(var item in buffer)
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var info = SystemAPI.GetSingleton<PlayerInfo>();
+
+
+            foreach (var (_, buffer, entity) in SystemAPI.Query<
+                RefRO<ExpTag>,
+                DynamicBuffer<CollisionEvent>>().WithEntityAccess())
             {
-                if (SystemAPI.HasComponent<PlayerTag>(item.other))
+                foreach (var item in buffer)
                 {
-                    info.exp++;
-                    ecb.DestroyEntity(entity);
-                    break;
+                    if (SystemAPI.HasComponent<PlayerTag>(item.other))
+                    {
+                        info.exp++;
+                        ecb.DestroyEntity(entity);
+                        break;
+                    }
                 }
             }
+
+            SystemAPI.SetSingleton<PlayerInfo>(info);
+
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
         }
-
-        SystemAPI.SetSingleton<PlayerInfo>(info);
-
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
     }
 }

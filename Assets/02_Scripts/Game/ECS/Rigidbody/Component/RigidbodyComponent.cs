@@ -1,7 +1,10 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-public struct RigidbodyComponent : IComponentData
+namespace Game.ECS
 {
-    public float3 velocity;
+    public struct RigidbodyComponent : IComponentData
+    {
+        public float3 velocity;
+    }
 }

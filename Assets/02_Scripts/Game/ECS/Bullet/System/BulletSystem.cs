@@ -2,58 +2,92 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
-[BurstCompile]
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(CollisionSystem))]
-public partial struct BulletSystem : ISystem
+namespace Game.ECS
 {
-    public void OnUpdate(ref SystemState state)
+    [BurstCompile]
+    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    [UpdateAfter(typeof(CollisionSystem))]
+    public partial struct BulletSystem : ISystem
     {
-        var ecb = new EntityCommandBuffer(Allocator.TempJob);
-        var lookup = state.GetBufferLookup<DamageEvent>();
+        private BufferLookup<DamageEvent> _damageEventLookup;
+        private ComponentLookup<EnemyTag> _enemyTagLookup;
 
-        foreach(var (bullet, rigid, hitBuffer, entity) in SystemAPI.Query<
-            RefRW<BulletComponent>,
-            RefRW<RigidbodyComponent>,
-            DynamicBuffer<CollisionEvent>>().WithEntityAccess())
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
         {
-            rigid.ValueRW.velocity = bullet.ValueRO.dir * bullet.ValueRO.setup.moveSpeed;
-            bullet.ValueRW.lifeTime -= SystemAPI.Time.DeltaTime;
+            _damageEventLookup = state.GetBufferLookup<DamageEvent>(true);
+            _enemyTagLookup = state.GetComponentLookup<EnemyTag>(true);
 
-            if (bullet.ValueRO.lifeTime <= 0f)
-            {
-                ecb.DestroyEntity(entity);
-                continue;
-            }
-
-            foreach (var evt in hitBuffer)
-            {
-                var target = evt.other;
-
-                if(state.EntityManager.HasBuffer<DamageEvent>(target) && state.EntityManager
-                    .HasComponent<EnemyTag>(target))
-                {
-                    var buffer = lookup[target];
-                    buffer.Add(new DamageEvent
-                    {
-                        amount = bullet.ValueRO.setup.damage
-                    });
-
-                    if(bullet.ValueRO.setup.penetCount > 0)
-                    {
-                        bullet.ValueRW.setup.penetCount--;
-                    }
-                    else
-                    {
-                        ecb.DestroyEntity(entity);
-                    }
-
-                    break;
-                }
-            }
+            state.RequireForUpdate<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
         }
 
-        ecb.Playback(state.EntityManager);
-        ecb.Dispose();
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            _damageEventLookup.Update(ref state);
+            _enemyTagLookup.Update(ref state);
+
+            var ecbSingleton = SystemAPI.GetSingleton<EndFixedStepSimulationEntityCommandBufferSystem.Singleton>();
+            var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
+
+            state.Dependency = new BulletUpdateJob
+            {
+                deltaTime = SystemAPI.Time.DeltaTime,
+                damageEventLookup = _damageEventLookup,
+                enemyTagLookup = _enemyTagLookup,
+                ecb = ecb
+            }.ScheduleParallel(state.Dependency);
+        }
+    }
+
+    [BurstCompile]
+    public partial struct BulletUpdateJob : IJobEntity
+    {
+        public float deltaTime;
+
+        [ReadOnly] public BufferLookup<DamageEvent> damageEventLookup;
+        [ReadOnly] public ComponentLookup<EnemyTag> enemyTagLookup;
+
+        public EntityCommandBuffer.ParallelWriter ecb;
+
+        public void Execute(
+            [ChunkIndexInQuery] int sortKey,
+            Entity entity,
+            ref BulletComponent bullet,
+            ref RigidbodyComponent rigid,
+            in DynamicBuffer<CollisionEvent> hitBuffer)
+        {
+            rigid.velocity = bullet.dir * bullet.setup.moveSpeed;
+            bullet.lifeTime -= deltaTime;
+
+            if (bullet.lifeTime <= 0f)
+            {
+                ecb.DestroyEntity(sortKey, entity);
+                return;
+            }
+
+            for (int i = 0; i < hitBuffer.Length; i++)
+            {
+                var target = hitBuffer[i].other;
+
+                if (!damageEventLookup.HasBuffer(target) || !enemyTagLookup.HasComponent(target))
+                    continue;
+
+                ecb.AppendToBuffer(sortKey, target, new DamageEvent
+                {
+                    amount = bullet.setup.damage
+                });
+
+                if (bullet.setup.penetCount > 0)
+                {
+                    bullet.setup.penetCount--;
+                }
+                else
+                {
+                    ecb.DestroyEntity(sortKey, entity);
+                }
+
+            }
+        }
     }
 }

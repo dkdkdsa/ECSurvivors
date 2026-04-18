@@ -1,22 +1,26 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class DropAuthoring : MonoBehaviour
+namespace Game.ECS
 {
-    public int dropCount;
-    public GameObject prefab;
-
-    public class Baker : Baker<DropAuthoring>
+    public class DropAuthoring : MonoBehaviour
     {
-        public override void Bake(DropAuthoring authoring)
-        {
-            var entity = GetEntity(TransformUsageFlags.Dynamic);
+        public int dropCount;
+        public GameObject prefab;
 
-            AddComponent<DropTable>(entity, new DropTable
+        public class Baker : Baker<DropAuthoring>
+        {
+            public override void Bake(DropAuthoring authoring)
             {
-                dropCount = authoring.dropCount,
-                prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic)
-            });
+                var entity = GetEntity(TransformUsageFlags.Dynamic);
+
+                AddComponent<DropTable>(entity, new DropTable
+                {
+                    dropCount = authoring.dropCount,
+                    prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic)
+                });
+            }
         }
     }
+
 }

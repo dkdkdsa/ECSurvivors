@@ -1,27 +1,30 @@
 using Unity.Entities;
 using UnityEngine;
 
-public class AutoAttackAuthoring : MonoBehaviour
+namespace Game.ECS
 {
-    public GameObject prefab;
-    public float radius;
-    public float interval;
-    public BulletSetup setup;
-
-    public class Baker : Baker<AutoAttackAuthoring>
+    public class AutoAttackAuthoring : MonoBehaviour
     {
-        public override void Bake(AutoAttackAuthoring authoring)
-        {
-            var entity = GetEntity(TransformUsageFlags.None);
+        public GameObject prefab;
+        public float radius;
+        public float interval;
+        public BulletSetup setup;
 
-            AddComponent<AutoAttack>(entity, new AutoAttack
+        public class Baker : Baker<AutoAttackAuthoring>
+        {
+            public override void Bake(AutoAttackAuthoring authoring)
             {
-                prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic),
-                attackInterval = authoring.interval,
-                currentInterval = authoring.interval,
-                setup = authoring.setup,
-                radius = authoring.radius,
-            });
+                var entity = GetEntity(TransformUsageFlags.None);
+
+                AddComponent<AutoAttack>(entity, new AutoAttack
+                {
+                    prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic),
+                    attackInterval = authoring.interval,
+                    currentInterval = authoring.interval,
+                    setup = authoring.setup,
+                    radius = authoring.radius,
+                });
+            }
         }
     }
 }
