@@ -335,7 +335,7 @@ MonoBehaviour:
   radius: 15
   interval: 0.06
   setup:
-    damage: -50
+    damage: 1
     lifeTime: 3
     moveSpeed: 15
     size: 3
