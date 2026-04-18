@@ -23,18 +23,15 @@ namespace Game.ECS
 
         public void OnUpdate(ref SystemState state)
         {
-            var info = SystemAPI.GetSingleton<PlayerInfo>();
-
-            if (info.exp / info.needLevelUp > 0)
+            foreach (var info in SystemAPI.Query<RefRW<PlayerInfo>>())
             {
-                int remain = info.exp % info.needLevelUp;
-                info.level += info.exp / info.needLevelUp;
-
-                info.needLevelUp *= 2 * info.exp / info.needLevelUp;
-                info.exp = remain;
+                while (info.ValueRW.exp >= info.ValueRW.needLevelUp)
+                {
+                    info.ValueRW.exp -= info.ValueRW.needLevelUp;
+                    info.ValueRW.level += 1;
+                    info.ValueRW.needLevelUp *= 2;
+                }
             }
-
-            SystemAPI.SetSingleton<PlayerInfo>(info);
         }
     }
 }

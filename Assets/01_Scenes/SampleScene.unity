@@ -154,19 +154,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1885927138}
-        m_TargetAssemblyTypeName: PlayerLevelUI, Assembly-CSharp
-        m_MethodName: OnPlayerInfoChanged
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 2024546522}
-        m_TargetAssemblyTypeName: LevelUpUI, Assembly-CSharp
+        m_TargetAssemblyTypeName: Game.UI.PlayerLevelUI, Assembly-CSharp
         m_MethodName: OnPlayerInfoChanged
         m_Mode: 0
         m_Arguments:
@@ -219,11 +207,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fe97d2d78855854dacb4318a8aeddc7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPositionBridge
-  OnPlayerPosition:
+  OnPlayerPositionChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 519420033}
-        m_TargetAssemblyTypeName: CameraFollow, Assembly-CSharp
+      - m_Target: {fileID: 241788540}
+        m_TargetAssemblyTypeName: Game.ETC.ScrollBG, Assembly-CSharp
         m_MethodName: OnPlayerPosition
         m_Mode: 0
         m_Arguments:
@@ -234,8 +222,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 241788540}
-        m_TargetAssemblyTypeName: ScrollBG, Assembly-CSharp
+      - m_Target: {fileID: 519420033}
+        m_TargetAssemblyTypeName: Game.ETC.CameraFollow, Assembly-CSharp
         m_MethodName: OnPlayerPosition
         m_Mode: 0
         m_Arguments:

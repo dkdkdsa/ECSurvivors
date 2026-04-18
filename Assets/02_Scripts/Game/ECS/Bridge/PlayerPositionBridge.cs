@@ -1,28 +1,65 @@
+using Game.ECS;
+using System;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Game.ECS
+namespace Game.UI
 {
     public class PlayerPositionBridge : MonoBehaviour
     {
+        public UnityEvent<Vector3> OnPlayerPositionChanged;
+
+        private EntityManager _entityManager;
         private EntityQuery _query;
 
-        public UnityEvent<Vector3> OnPlayerPosition;
+        private bool _initialized;
+        private bool _hasValue;
+        private float3 _oldPosition;
 
-        private void Awake()
+        private void Start()
         {
-            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _query = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerPosition>());
+            TryInitialize();
         }
 
         private void Update()
         {
-            if (_query.IsEmpty)
+            if (!_initialized)
+            {
+                if (!TryInitialize())
+                    return;
+            }
+
+            if (_query.IsEmptyIgnoreFilter)
                 return;
 
-            var pos = _query.GetSingleton<PlayerPosition>();
-            OnPlayerPosition?.Invoke(pos.Value);
+            PlayerPosition current = _query.GetSingleton<PlayerPosition>();
+
+            if (!_hasValue)
+            {
+                _oldPosition = current.Value;
+                _hasValue = true;
+                return;
+            }
+
+            if (!_oldPosition.Equals(current.Value))
+            {
+                _oldPosition = current.Value;
+                OnPlayerPositionChanged?.Invoke(current.Value);
+            }
+        }
+
+        private bool TryInitialize()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null)
+                return false;
+
+            _entityManager = world.EntityManager;
+            _query = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerPosition>());
+            _initialized = true;
+            return true;
         }
     }
 }

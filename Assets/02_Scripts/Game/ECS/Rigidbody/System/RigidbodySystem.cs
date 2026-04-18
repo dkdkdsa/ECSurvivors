@@ -15,7 +15,7 @@ namespace Game.ECS
         public void OnUpdate(ref SystemState state)
         {
             var job = new RigidbodyMoveJob();
-            job.ScheduleParallel();
+            state.Dependency = job.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]

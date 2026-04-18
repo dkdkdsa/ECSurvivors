@@ -11,7 +11,7 @@ namespace Game.ECS
     {
         public void OnUpdate(ref SystemState state)
         {
-            new FlipJob().ScheduleParallel();
+            state.Dependency = new FlipJob().ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]

@@ -23,7 +23,7 @@ namespace Game.ECS
                 playerPos = pos,
             };
 
-            job.ScheduleParallel();
+            state.Dependency = job.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]

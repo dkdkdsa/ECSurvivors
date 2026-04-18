@@ -26,7 +26,10 @@ namespace Game.ECS
                     velocity = authoring.initialVelocity,
                 });
 
-                AddComponent<BaseRotation>(entity);
+                AddComponent(entity, new BaseRotation
+                {
+                    Value = quaternion.identity,
+                });
             }
         }
     }

@@ -1,4 +1,5 @@
 using Game.ECS;
+using Unity.Entities;
 using UnityEngine;
 
 namespace Game.UI
@@ -9,9 +10,13 @@ namespace Game.UI
         [SerializeField] private LevelUpUIPanel _prefab;
         [SerializeField] private Transform _panelRoot;
 
+        private EntityManager _entityManager;
+        private Entity _requestEntity;
+
         private void Awake()
         {
-            EnforceDataQ.Clear();
+            _requestEntity = Entity.Null;
+            TryResolveRequestEntity();
         }
 
         public void OnPlayerInfoChanged(PlayerInfo oldInfo, PlayerInfo newInfo)
@@ -30,23 +35,49 @@ namespace Game.UI
 
         private void Callback(LevelUpUIData data)
         {
-            EnforceDataQ.Enqueue(data.data);
-
+            if (TryResolveRequestEntity())
+            {
+                _entityManager.SetComponentData(_requestEntity, new BulletEnforceRequest
+                {
+                    data = data.data,
+                    pending = 1
+                });
+            }
+ 
             Time.timeScale = 1;
+            ClearPanels();
+        }
 
+        private bool TryResolveRequestEntity()
+        {
+            if (_entityManager == default)
+            {
+                var world = World.DefaultGameObjectInjectionWorld;
+                if (world == null)
+                    return false;
+
+                _entityManager = world.EntityManager;
+            }
+
+            if (_requestEntity != Entity.Null && _entityManager.Exists(_requestEntity))
+                return true;
+
+            EntityQuery query = _entityManager.CreateEntityQuery(typeof(BulletEnforceRequest));
+            if (query.TryGetSingletonEntity<BulletEnforceRequest>(out var entity))
+            {
+                _requestEntity = entity;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ClearPanels()
+        {
             int childCount = _panelRoot.childCount;
-
             for (int i = 0; i < childCount; i++)
             {
                 Destroy(_panelRoot.GetChild(i).gameObject);
-            }
-        }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                Time.timeScale = 1;
             }
         }
     }

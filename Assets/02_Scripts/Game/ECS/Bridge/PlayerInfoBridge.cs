@@ -1,37 +1,66 @@
+using System;
+using Game.ECS;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Game.ECS
+namespace Game.UI
 {
     public class PlayerInfoBridge : MonoBehaviour
     {
-        private EntityQuery _query;
-        private PlayerInfo? _oldInfo;
-
         public UnityEvent<PlayerInfo, PlayerInfo> OnPlayerInfoChanged;
 
-        private void Awake()
+        private EntityManager _entityManager;
+        private EntityQuery _query;
+
+        private bool _initialized;
+        private bool _hasValue;
+        private PlayerInfo _oldInfo;
+
+        private void Start()
         {
-            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-            _query = em.CreateEntityQuery(ComponentType.ReadOnly<PlayerInfo>());
+            TryInitialize();
         }
 
         private void Update()
         {
-            if (_query.IsEmpty)
+            if (!_initialized)
+            {
+                if (!TryInitialize())
+                    return;
+            }
+
+            if (_query.IsEmptyIgnoreFilter)
                 return;
 
-            var info = _query.GetSingleton<PlayerInfo>();
+            PlayerInfo currentInfo = _query.GetSingleton<PlayerInfo>();
 
-            if (_oldInfo == null)
-                _oldInfo = info;
-            else if (!_oldInfo.Value.Equals(info))
+            if (!_hasValue)
             {
-                OnPlayerInfoChanged?.Invoke(_oldInfo.Value, info);
-                _oldInfo = info;
+                _oldInfo = currentInfo;
+                _hasValue = true;
+                return;
+            }
+
+            if (!_oldInfo.Equals(currentInfo))
+            {
+                PlayerInfo previous = _oldInfo;
+                _oldInfo = currentInfo;
+                OnPlayerInfoChanged?.Invoke(previous, currentInfo);
             }
         }
-    }
 
+        private bool TryInitialize()
+        {
+            var world = World.DefaultGameObjectInjectionWorld;
+            if (world == null)
+                return false;
+
+            _entityManager = world.EntityManager;
+            _query = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerInfo>());
+            _initialized = true;
+            return true;
+        }
+
+    }
 }
