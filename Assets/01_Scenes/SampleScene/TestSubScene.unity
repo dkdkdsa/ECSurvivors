@@ -149,9 +149,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnerAuthoring
   enemyPrefab: {fileID: 4335088201849958969, guid: c6323e467a52544478f9ffcbdc012074, type: 3}
-  radius: 30
+  radius: 100
   tick: 0.7
-  spawnPerTick: 100
+  spawnPerTick: 500
   randomSeed: 0
 --- !u!4 &304987448
 Transform:

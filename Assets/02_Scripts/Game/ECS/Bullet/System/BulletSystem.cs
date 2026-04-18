@@ -85,6 +85,7 @@ namespace Game.ECS
                 else
                 {
                     ecb.DestroyEntity(sortKey, entity);
+                    break;
                 }
 
             }
