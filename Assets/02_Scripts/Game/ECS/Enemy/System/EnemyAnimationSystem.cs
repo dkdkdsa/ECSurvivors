@@ -30,14 +30,14 @@ public partial struct EnemyAnimationSystem : ISystem
 
         public void Execute(
             ref LocalTransform transform,
+            in BaseRotation baseRot,
             [EntityIndexInQuery] int entityIndex)
         {
-
             float phase = entityIndex * 0.37f;
-
             float angle = math.sin((elapsed + phase) * Frequency) * Amplitude;
 
-            transform.Rotation = quaternion.RotateZ(angle);
+            transform.Rotation = math.mul(baseRot.Value, quaternion.RotateZ(angle));
         }
+
     }
 }

@@ -1,5 +1,13 @@
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
+
+public struct BaseRotation : IComponentData
+{
+    public quaternion Value;
+}
+
 
 public class RigidbodyAuthoring : MonoBehaviour
 {
@@ -15,6 +23,8 @@ public class RigidbodyAuthoring : MonoBehaviour
             {
                 velocity = authoring.initialVelocity,
             });
+
+            AddComponent<BaseRotation>(entity);
         }
     }
 }
