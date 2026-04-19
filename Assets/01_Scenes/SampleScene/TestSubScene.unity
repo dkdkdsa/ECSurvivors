@@ -150,7 +150,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnerAuthoring
   enemyPrefab: {fileID: 4335088201849958969, guid: c6323e467a52544478f9ffcbdc012074, type: 3}
   radius: 100
-  tick: 0.7
+  tick: 0.5
   spawnPerTick: 500
   randomSeed: 0
 --- !u!4 &304987448
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d1355104f8f2d446a0f50ffa98c04bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitAuthoring
-  maxHP: 50
+  maxHP: 1e+10
   moveSpeed: 5
 --- !u!114 &1077344884
 MonoBehaviour:
@@ -335,11 +335,11 @@ MonoBehaviour:
   radius: 15
   interval: 0.06
   setup:
-    damage: 1
+    damage: 100
     lifeTime: 3
     moveSpeed: 15
     size: 3
-    penetCount: 3
+    penetCount: 10
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

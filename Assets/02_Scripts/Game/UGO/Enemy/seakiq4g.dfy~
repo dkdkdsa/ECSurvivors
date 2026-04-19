@@ -7,6 +7,11 @@ using UnityEngine;
 
 namespace Game.UGO
 {
+    /// <summary>
+    /// ECS EnemyMoveSystem 의 GameObject 대응체.
+    /// 등록된 EnemyGO 들의 위치에서 플레이어 방향을 계산해 RigidbodyGO.velocity 를 갱신한다.
+    /// 방향 계산은 Burst Job 으로 병렬화. velocity 적분은 RigidbodySystemGO 가 담당.
+    /// </summary>
     [DefaultExecutionOrder(SystemOrderGO.ENEMY_MOVE)]
     public class EnemyMoveSystemGO : MonoBehaviour
     {

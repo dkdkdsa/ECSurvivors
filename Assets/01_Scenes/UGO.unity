@@ -619,6 +619,105 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 828693475}
   m_CullTransparentMesh: 1
+--- !u!1 &1001366941
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1001366945}
+  - component: {fileID: 1001366944}
+  - component: {fileID: 1001366942}
+  - component: {fileID: 1001366946}
+  - component: {fileID: 1001366947}
+  m_Layer: 0
+  m_Name: Bench
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1001366942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001366941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6c07798c328a74d81c0079efb7c882, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkHUD
+  countProviderBehaviour: {fileID: 1001366946}
+  fontSize: 20
+  margin: {x: 16, y: 16}
+  size: {x: 320, y: 180}
+  fpsSmoothing: 0.1
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
+--- !u!114 &1001366944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001366941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfbfec89b33baba439ffd3dfee44560e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkRecorder
+  targetObjectCounts: 64000000f4010000e8030000881300001027000050c30000
+  category: 0
+  sampleDurationPerBucket: 2
+  perBucketTimeoutSeconds: 300
+  csvFileName: benchmark_results.csv
+  appendMode: 1
+  writeHeader: 1
+  quitOnFinish: 1
+  countProviderBehaviour: {fileID: 1001366946}
+--- !u!4 &1001366945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001366941}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1001366946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001366941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6343d7564d7cbf441b56e3339e0a08ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkCountProviderGO
+--- !u!114 &1001366947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001366941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b873a554bcd29841b455c6eec51119a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VSyncOff
 --- !u!1 &1192787197
 GameObject:
   m_ObjectHideFlags: 0
@@ -944,11 +1043,11 @@ MonoBehaviour:
   radius: 15
   interval: 0.1
   setup:
-    damage: 50
+    damage: 500
     lifeTime: 10
     moveSpeed: 15
     size: 3
-    penetCount: 3
+    penetCount: 10
 --- !u!114 &1441848732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -961,7 +1060,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96c5843a91e6d214da7996bae81c292e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.UnitGO
-  maxHP: 5
+  maxHP: 1e+20
   moveSpeed: 5
 --- !u!114 &1441848733
 MonoBehaviour:
@@ -1095,9 +1194,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.EnemySpawnerGO
   enemyPrefab: {fileID: 4335088201849958969, guid: 3e529fde88cb02245ad7666110c04395, type: 3}
-  radius: 15
-  tick: 0.7
-  spawnPerTick: 100
+  radius: 100
+  tick: 0.5
+  spawnPerTick: 500
   randomSeed: 0
 --- !u!1 &1775001225
 GameObject:
@@ -1556,3 +1655,4 @@ SceneRoots:
   - {fileID: 1737911393}
   - {fileID: 592733223}
   - {fileID: 2062129382}
+  - {fileID: 1001366945}

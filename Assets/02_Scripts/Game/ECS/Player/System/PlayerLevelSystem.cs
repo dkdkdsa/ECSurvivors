@@ -17,7 +17,7 @@ namespace Game.ECS
         {
             state.EntityManager.CreateSingleton<PlayerInfo>(new PlayerInfo
             {
-                needLevelUp = 10,
+                needLevelUp = int.MaxValue,
             });
         }
 

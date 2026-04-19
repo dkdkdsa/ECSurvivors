@@ -24,6 +24,8 @@ namespace Game.UGO
 
         private readonly List<PlayerGO> _players = new List<PlayerGO>(2);
 
+        public int ActiveCount => _players.Count;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }

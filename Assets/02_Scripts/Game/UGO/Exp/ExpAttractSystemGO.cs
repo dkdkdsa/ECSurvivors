@@ -27,6 +27,8 @@ namespace Game.UGO
 
         private readonly List<ExpGO> _items = new List<ExpGO>(4096);
 
+        public int ActiveCount => _items.Count;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
@@ -51,8 +53,8 @@ namespace Game.UGO
             float dt = Time.deltaTime;
 
             var positions = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var inVel     = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var outVel    = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var inVel = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var outVel = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 
             for (int i = 0; i < count; i++)
             {
