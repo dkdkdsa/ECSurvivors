@@ -26,6 +26,11 @@ namespace Game.UGO
         }
 
         private readonly List<ExpGO> _items = new List<ExpGO>(4096);
+        private readonly Dictionary<ExpGO, int> _indexOf = new Dictionary<ExpGO, int>(4096);
+
+        private NativeList<float3> _positions;
+        private NativeList<float3> _inVel;
+        private NativeList<float3> _outVel;
 
         public int ActiveCount => _items.Count;
 
@@ -33,15 +38,39 @@ namespace Game.UGO
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
             _instance = this;
+
+            _positions = new NativeList<float3>(4096, Allocator.Persistent);
+            _inVel = new NativeList<float3>(4096, Allocator.Persistent);
+            _outVel = new NativeList<float3>(4096, Allocator.Persistent);
         }
 
         private void OnDestroy()
         {
+            if (_positions.IsCreated) _positions.Dispose();
+            if (_inVel.IsCreated) _inVel.Dispose();
+            if (_outVel.IsCreated) _outVel.Dispose();
             if (_instance == this) _instance = null;
         }
 
-        public void Register(ExpGO exp) => _items.Add(exp);
-        public void Unregister(ExpGO exp) => _items.Remove(exp);
+        public void Register(ExpGO exp)
+        {
+            _indexOf[exp] = _items.Count;
+            _items.Add(exp);
+        }
+
+        public void Unregister(ExpGO exp)
+        {
+            if (!_indexOf.TryGetValue(exp, out int idx)) return;
+            int last = _items.Count - 1;
+            if (idx != last)
+            {
+                var tail = _items[last];
+                _items[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _items.RemoveAt(last);
+            _indexOf.Remove(exp);
+        }
 
         private void Update()
         {
@@ -52,35 +81,31 @@ namespace Game.UGO
             float2 playerPos = PlayerPositionHolderGO.Value.xy;
             float dt = Time.deltaTime;
 
-            var positions = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var inVel = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var outVel = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            _positions.ResizeUninitialized(count);
+            _inVel.ResizeUninitialized(count);
+            _outVel.ResizeUninitialized(count);
 
             for (int i = 0; i < count; i++)
             {
-                positions[i] = _items[i].transform.position;
+                _positions[i] = _items[i].transform.position;
                 var rb = _items[i].cachedRigid;
-                inVel[i] = rb != null ? (float3)rb.velocity : float3.zero;
+                _inVel[i] = rb != null ? (float3)rb.velocity : float3.zero;
             }
 
             new AttractJob
             {
-                positions = positions,
-                inVelocities = inVel,
+                positions = _positions.AsArray(),
+                inVelocities = _inVel.AsArray(),
                 playerPos = playerPos,
                 dt = dt,
-                outVelocities = outVel
+                outVelocities = _outVel.AsArray()
             }.Schedule(count, 64).Complete();
 
             for (int i = 0; i < count; i++)
             {
                 var rb = _items[i].cachedRigid;
-                if (rb != null) rb.velocity = outVel[i];
+                if (rb != null) rb.velocity = _outVel[i];
             }
-
-            positions.Dispose();
-            inVel.Dispose();
-            outVel.Dispose();
         }
 
         [BurstCompile]

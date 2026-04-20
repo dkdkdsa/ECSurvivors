@@ -22,6 +22,7 @@ namespace Game.UGO
         }
 
         private readonly List<ExpGO> _items = new List<ExpGO>(4096);
+        private readonly Dictionary<ExpGO, int> _indexOf = new Dictionary<ExpGO, int>(4096);
 
         private void Awake()
         {
@@ -34,8 +35,25 @@ namespace Game.UGO
             if (_instance == this) _instance = null;
         }
 
-        public void Register(ExpGO exp) => _items.Add(exp);
-        public void Unregister(ExpGO exp) => _items.Remove(exp);
+        public void Register(ExpGO exp)
+        {
+            _indexOf[exp] = _items.Count;
+            _items.Add(exp);
+        }
+
+        public void Unregister(ExpGO exp)
+        {
+            if (!_indexOf.TryGetValue(exp, out int idx)) return;
+            int last = _items.Count - 1;
+            if (idx != last)
+            {
+                var tail = _items[last];
+                _items[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _items.RemoveAt(last);
+            _indexOf.Remove(exp);
+        }
 
         private void FixedUpdate()
         {

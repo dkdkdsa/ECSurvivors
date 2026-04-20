@@ -22,6 +22,7 @@ namespace Game.UGO
         }
 
         private readonly List<UnitGO> _units = new List<UnitGO>(2048);
+        private readonly Dictionary<UnitGO, int> _indexOf = new Dictionary<UnitGO, int>(2048);
 
         private void Awake()
         {
@@ -34,8 +35,25 @@ namespace Game.UGO
             if (_instance == this) _instance = null;
         }
 
-        public void Register(UnitGO unit) => _units.Add(unit);
-        public void Unregister(UnitGO unit) => _units.Remove(unit);
+        public void Register(UnitGO unit)
+        {
+            _indexOf[unit] = _units.Count;
+            _units.Add(unit);
+        }
+
+        public void Unregister(UnitGO unit)
+        {
+            if (!_indexOf.TryGetValue(unit, out int idx)) return;
+            int last = _units.Count - 1;
+            if (idx != last)
+            {
+                var tail = _units[last];
+                _units[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _units.RemoveAt(last);
+            _indexOf.Remove(unit);
+        }
 
         private void Update()
         {
