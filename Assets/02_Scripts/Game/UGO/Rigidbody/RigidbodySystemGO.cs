@@ -11,8 +11,6 @@ namespace Game.UGO
     [DefaultExecutionOrder(SystemOrderGO.RIGIDBODY)]
     public class RigidbodySystemGO : MonoBehaviour
     {
-        public const float FixedDT = 1f / 60f;
-
         private static RigidbodySystemGO _instance;
         public static bool HasInstance => _instance != null;
         public static RigidbodySystemGO Instance
@@ -100,7 +98,7 @@ namespace Game.UGO
             var job = new IntegrateJob
             {
                 velocities = _velocities.AsArray(),
-                dt = FixedDT
+                dt = Time.fixedDeltaTime,
             };
 
             job.Schedule(_transforms).Complete();
