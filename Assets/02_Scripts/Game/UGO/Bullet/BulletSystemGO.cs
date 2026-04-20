@@ -59,7 +59,7 @@ namespace Game.UGO
 
         private void FixedUpdate()
         {
-            float dt = RigidbodySystemGO.FixedDT;
+            float dt = Time.fixedDeltaTime;
 
             for (int i = _bullets.Count - 1; i >= 0; i--)
             {

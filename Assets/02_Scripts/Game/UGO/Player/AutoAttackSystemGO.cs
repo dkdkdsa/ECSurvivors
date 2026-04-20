@@ -73,7 +73,7 @@ namespace Game.UGO
             int attackerCount = _attackers.Count;
             if (attackerCount == 0) return;
 
-            float dt = RigidbodySystemGO.FixedDT;
+            float dt = Time.fixedDeltaTime;
             for (int i = 0; i < attackerCount; i++)
             {
                 if (_attackers[i].currentInterval > 0f)
