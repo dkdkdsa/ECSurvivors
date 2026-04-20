@@ -1,5 +1,7 @@
+
 # ECSurvivors
 ECS 기반 뱀서라이크 대규모 오브젝트 처리 실험 프로젝트
+<img width="960" height="540" alt="2026-04-20_003931" src="https://github.com/user-attachments/assets/7bde3e63-241c-444b-9fa0-6cebb7bb6554" />
 
 ## 목적  
 본 프로젝트는 ECS(Entity Component System)를 활용하여  
@@ -33,6 +35,9 @@ GameObject 구현에서도
 - JobSystem을 활용한 병렬 처리  
 
 를 적용하여 최대한 동일한 조건에서 성능을 비교
+
+<img width="1800" height="517" alt="그림3123123123" src="https://github.com/user-attachments/assets/e0755669-addd-45f9-823b-a03ede17213b" />
+
 
 벤치마크 테스트 환경은 다음과 같음
 
