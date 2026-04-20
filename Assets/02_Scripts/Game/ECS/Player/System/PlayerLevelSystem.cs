@@ -13,6 +13,7 @@ namespace Game.ECS
     [BurstCompile]
     public partial struct PlayerLevelSystem : ISystem
     {
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.EntityManager.CreateSingleton<PlayerInfo>(new PlayerInfo
@@ -21,6 +22,7 @@ namespace Game.ECS
             });
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             foreach (var info in SystemAPI.Query<RefRW<PlayerInfo>>())

@@ -9,11 +9,13 @@ namespace Game.ECS
     [BurstCompile]
     public partial struct EnemyMoveSystem : ISystem
     {
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlayerPosition>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var pos = SystemAPI.GetSingleton<PlayerPosition>().Value;

@@ -6,6 +6,7 @@ namespace Game.ECS
     [BurstCompile]
     public partial struct AttackEnforceSystem : ISystem
     {
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!SystemAPI.TryGetSingletonRW<BulletEnforceRequest>(out var requestRW))

@@ -12,6 +12,7 @@ namespace Game.ECS
     {
         public const float FixedDT = 1f / 60f;
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var job = new RigidbodyMoveJob();
