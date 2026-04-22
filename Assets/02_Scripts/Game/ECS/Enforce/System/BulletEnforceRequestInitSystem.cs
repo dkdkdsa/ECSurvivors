@@ -1,10 +1,13 @@
+using Unity.Burst;
 using Unity.Entities;
 
 namespace Game.ECS
 {
+    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct BulletEnforceRequestInitSystem : ISystem
     {
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             if (!SystemAPI.TryGetSingletonEntity<BulletEnforceRequest>(out _))

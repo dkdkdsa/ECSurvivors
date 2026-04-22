@@ -28,14 +28,31 @@ namespace Game.UGO
         private readonly List<AutoAttackGO> _attackers = new List<AutoAttackGO>(8);
         private readonly Dictionary<GameObject, GameObjectPool<BulletGO>> _pools = new Dictionary<GameObject, GameObjectPool<BulletGO>>();
 
+        private NativeList<float3> _enemyPositions;
+        private NativeList<float3> _attackerPositions;
+        private NativeList<float> _radiiSq;
+        private NativeList<int> _resultIdx;
+        private NativeList<byte> _canFire;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
             _instance = this;
+
+            _enemyPositions = new NativeList<float3>(2048, Allocator.Persistent);
+            _attackerPositions = new NativeList<float3>(8, Allocator.Persistent);
+            _radiiSq = new NativeList<float>(8, Allocator.Persistent);
+            _resultIdx = new NativeList<int>(8, Allocator.Persistent);
+            _canFire = new NativeList<byte>(8, Allocator.Persistent);
         }
 
         private void OnDestroy()
         {
+            if (_enemyPositions.IsCreated) _enemyPositions.Dispose();
+            if (_attackerPositions.IsCreated) _attackerPositions.Dispose();
+            if (_radiiSq.IsCreated) _radiiSq.Dispose();
+            if (_resultIdx.IsCreated) _resultIdx.Dispose();
+            if (_canFire.IsCreated) _canFire.Dispose();
             if (_instance == this) _instance = null;
         }
 
@@ -56,7 +73,7 @@ namespace Game.UGO
             int attackerCount = _attackers.Count;
             if (attackerCount == 0) return;
 
-            float dt = RigidbodySystemGO.FixedDT;
+            float dt = Time.fixedDeltaTime;
             for (int i = 0; i < attackerCount; i++)
             {
                 if (_attackers[i].currentInterval > 0f)
@@ -68,41 +85,41 @@ namespace Game.UGO
             int enemyCount = enemyList.Count;
             if (enemyCount == 0) return;
 
-            var enemyPositions = new NativeArray<float3>(enemyCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            _enemyPositions.ResizeUninitialized(enemyCount);
             for (int i = 0; i < enemyCount; i++)
-                enemyPositions[i] = enemyList[i].position;
+                _enemyPositions[i] = enemyList[i].position;
 
-            var attackerPositions = new NativeArray<float3>(attackerCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var radiiSq           = new NativeArray<float> (attackerCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var resultIdx         = new NativeArray<int>   (attackerCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var canFire           = new NativeArray<byte>  (attackerCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            _attackerPositions.ResizeUninitialized(attackerCount);
+            _radiiSq.ResizeUninitialized(attackerCount);
+            _resultIdx.ResizeUninitialized(attackerCount);
+            _canFire.ResizeUninitialized(attackerCount);
 
             for (int i = 0; i < attackerCount; i++)
             {
-                attackerPositions[i] = _attackers[i].transform.position;
-                radiiSq[i] = _attackers[i].radius * _attackers[i].radius;
-                canFire[i] = (byte)(_attackers[i].currentInterval <= 0f ? 1 : 0);
+                _attackerPositions[i] = _attackers[i].transform.position;
+                _radiiSq[i] = _attackers[i].radius * _attackers[i].radius;
+                _canFire[i] = (byte)(_attackers[i].currentInterval <= 0f ? 1 : 0);
             }
 
             new FindClosestJob
             {
-                attackerPositions = attackerPositions,
-                radiiSq = radiiSq,
-                canFire = canFire,
-                enemyPositions = enemyPositions,
-                resultIdx = resultIdx
+                attackerPositions = _attackerPositions.AsArray(),
+                radiiSq = _radiiSq.AsArray(),
+                canFire = _canFire.AsArray(),
+                enemyPositions = _enemyPositions.AsArray(),
+                resultIdx = _resultIdx.AsArray()
             }.Schedule(attackerCount, 4).Complete();
 
             for (int i = 0; i < attackerCount; i++)
             {
-                int idx = resultIdx[i];
+                int idx = _resultIdx[i];
                 if (idx < 0) continue;
 
                 var attacker = _attackers[i];
                 attacker.currentInterval = attacker.interval;
 
-                float3 myPos = attackerPositions[i];
-                float3 targetPos = enemyPositions[idx];
+                float3 myPos = _attackerPositions[i];
+                float3 targetPos = _enemyPositions[idx];
                 float2 dir2 = math.normalize((targetPos - myPos).xy);
 
                 var pool = GetOrCreatePool(attacker.prefab);
@@ -115,12 +132,6 @@ namespace Game.UGO
                 bullet.lifeTime = attacker.setup.lifeTime;
                 bullet.transform.localScale = Vector3.one * attacker.setup.size;
             }
-
-            attackerPositions.Dispose();
-            radiiSq.Dispose();
-            resultIdx.Dispose();
-            canFire.Dispose();
-            enemyPositions.Dispose();
         }
 
         private static readonly List<Transform> _enemyTransformCache = new List<Transform>(2048);

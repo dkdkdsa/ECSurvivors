@@ -11,8 +11,6 @@ namespace Game.UGO
     [DefaultExecutionOrder(SystemOrderGO.RIGIDBODY)]
     public class RigidbodySystemGO : MonoBehaviour
     {
-        public const float FixedDT = 1f / 60f;
-
         private static RigidbodySystemGO _instance;
         public static bool HasInstance => _instance != null;
         public static RigidbodySystemGO Instance
@@ -29,6 +27,7 @@ namespace Game.UGO
         }
 
         private readonly List<RigidbodyGO> _bodies = new List<RigidbodyGO>(1024);
+        private readonly Dictionary<RigidbodyGO, int> _indexOf = new Dictionary<RigidbodyGO, int>(1024);
         public IReadOnlyList<RigidbodyGO> Bodies => _bodies;
 
         private TransformAccessArray _transforms;
@@ -53,19 +52,28 @@ namespace Game.UGO
 
         public void Register(RigidbodyGO body)
         {
+            _indexOf[body] = _bodies.Count;
             _bodies.Add(body);
             _dirty = true;
         }
 
         public void Unregister(RigidbodyGO body)
         {
-            _bodies.Remove(body);
+            if (!_indexOf.TryGetValue(body, out int idx)) return;
+            int last = _bodies.Count - 1;
+            if (idx != last)
+            {
+                var tail = _bodies[last];
+                _bodies[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _bodies.RemoveAt(last);
+            _indexOf.Remove(body);
             _dirty = true;
         }
 
         private void RebuildArrays()
         {
-            // SetTransforms(null) 는 Unity 버전에 따라 NPE 가능 → Dispose 후 재생성으로 안전 처리
             if (_transforms.isCreated) _transforms.Dispose();
             _transforms = new TransformAccessArray(_bodies.Count);
 
@@ -84,14 +92,13 @@ namespace Game.UGO
             if (_bodies.Count == 0) return;
             if (_dirty || _transforms.length != _bodies.Count) RebuildArrays();
 
-            // velocity 는 다른 시스템(Player/EnemyMove/ExpAttract/Bullet 등)이 매 프레임 갱신했을 수 있음
             for (int i = 0; i < _bodies.Count; i++)
                 _velocities[i] = _bodies[i].velocity;
 
             var job = new IntegrateJob
             {
                 velocities = _velocities.AsArray(),
-                dt = FixedDT
+                dt = Time.fixedDeltaTime,
             };
 
             job.Schedule(_transforms).Complete();

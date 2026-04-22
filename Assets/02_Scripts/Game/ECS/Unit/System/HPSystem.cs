@@ -11,12 +11,14 @@ namespace Game.ECS
     {
         private ComponentLookup<DropTable> dropTableLookup;
 
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
             dropTableLookup = state.GetComponentLookup<DropTable>(isReadOnly: true);
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             dropTableLookup.Update(ref state);

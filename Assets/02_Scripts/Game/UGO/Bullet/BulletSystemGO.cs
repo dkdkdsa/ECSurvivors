@@ -22,6 +22,9 @@ namespace Game.UGO
         }
 
         private readonly List<BulletGO> _bullets = new List<BulletGO>(2048);
+        private readonly Dictionary<BulletGO, int> _indexOf = new Dictionary<BulletGO, int>(2048);
+
+        public int ActiveCount => _bullets.Count;
 
         public int ActiveCount => _bullets.Count;
 
@@ -36,12 +39,29 @@ namespace Game.UGO
             if (_instance == this) _instance = null;
         }
 
-        public void Register(BulletGO bullet) => _bullets.Add(bullet);
-        public void Unregister(BulletGO bullet) => _bullets.Remove(bullet);
+        public void Register(BulletGO bullet)
+        {
+            _indexOf[bullet] = _bullets.Count;
+            _bullets.Add(bullet);
+        }
+
+        public void Unregister(BulletGO bullet)
+        {
+            if (!_indexOf.TryGetValue(bullet, out int idx)) return;
+            int last = _bullets.Count - 1;
+            if (idx != last)
+            {
+                var tail = _bullets[last];
+                _bullets[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _bullets.RemoveAt(last);
+            _indexOf.Remove(bullet);
+        }
 
         private void FixedUpdate()
         {
-            float dt = RigidbodySystemGO.FixedDT;
+            float dt = Time.fixedDeltaTime;
 
             for (int i = _bullets.Count - 1; i >= 0; i--)
             {

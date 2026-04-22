@@ -9,12 +9,14 @@ namespace Game.ECS
     [BurstCompile]
     public partial struct PlayerPositionSyncSystem : ISystem
     {
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.EntityManager.CreateSingleton<PlayerPosition>();
             state.RequireForUpdate<PlayerTag>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             foreach (var transform in

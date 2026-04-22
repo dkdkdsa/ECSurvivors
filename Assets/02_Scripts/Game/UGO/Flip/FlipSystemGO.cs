@@ -24,14 +24,25 @@ namespace Game.UGO
             }
         }
 
+        private NativeList<float3> _velocities;
+        private NativeList<quaternion> _results;
+        private NativeList<byte> _keep;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
             _instance = this;
+
+            _velocities = new NativeList<float3>(1024, Allocator.Persistent);
+            _results = new NativeList<quaternion>(1024, Allocator.Persistent);
+            _keep = new NativeList<byte>(1024, Allocator.Persistent);
         }
 
         private void OnDestroy()
         {
+            if (_velocities.IsCreated) _velocities.Dispose();
+            if (_results.IsCreated) _results.Dispose();
+            if (_keep.IsCreated) _keep.Dispose();
             if (_instance == this) _instance = null;
         }
 
@@ -42,30 +53,26 @@ namespace Game.UGO
             int n = bodies.Count;
             if (n == 0) return;
 
-            var velocities = new NativeArray<float3>(n, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var results    = new NativeArray<quaternion>(n, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var keep       = new NativeArray<byte>(n, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            _velocities.ResizeUninitialized(n);
+            _results.ResizeUninitialized(n);
+            _keep.ResizeUninitialized(n);
 
             for (int i = 0; i < n; i++)
-                velocities[i] = bodies[i].velocity;
+                _velocities[i] = bodies[i].velocity;
 
             new FlipJob
             {
-                velocities = velocities,
-                results = results,
-                keep = keep
+                velocities = _velocities.AsArray(),
+                results = _results.AsArray(),
+                keep = _keep.AsArray()
             }.Schedule(n, 64).Complete();
 
             for (int i = 0; i < n; i++)
             {
-                if (keep[i] != 0) continue;
+                if (_keep[i] != 0) continue;
                 var br = bodies[i].baseRotation;
-                if (br != null) br.baseValue = results[i];
+                if (br != null) br.baseValue = _results[i];
             }
-
-            velocities.Dispose();
-            results.Dispose();
-            keep.Dispose();
         }
 
         [BurstCompile]

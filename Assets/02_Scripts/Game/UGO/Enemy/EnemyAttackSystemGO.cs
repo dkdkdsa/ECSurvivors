@@ -24,6 +24,7 @@ namespace Game.UGO
         }
 
         private readonly List<EnemyGO> _enemies = new List<EnemyGO>(2048);
+        private readonly Dictionary<EnemyGO, int> _indexOf = new Dictionary<EnemyGO, int>(2048);
 
         private void Awake()
         {
@@ -36,8 +37,25 @@ namespace Game.UGO
             if (_instance == this) _instance = null;
         }
 
-        public void Register(EnemyGO enemy) => _enemies.Add(enemy);
-        public void Unregister(EnemyGO enemy) => _enemies.Remove(enemy);
+        public void Register(EnemyGO enemy)
+        {
+            _indexOf[enemy] = _enemies.Count;
+            _enemies.Add(enemy);
+        }
+
+        public void Unregister(EnemyGO enemy)
+        {
+            if (!_indexOf.TryGetValue(enemy, out int idx)) return;
+            int last = _enemies.Count - 1;
+            if (idx != last)
+            {
+                var tail = _enemies[last];
+                _enemies[idx] = tail;
+                _indexOf[tail] = idx;
+            }
+            _enemies.RemoveAt(last);
+            _indexOf.Remove(enemy);
+        }
 
         public void CollectTransformsInto(List<Transform> dst)
         {

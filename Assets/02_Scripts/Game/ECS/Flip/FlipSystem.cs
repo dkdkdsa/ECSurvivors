@@ -9,6 +9,7 @@ namespace Game.ECS
     [UpdateAfter(typeof(RigidbodySystem))]
     public partial struct FlipSystem : ISystem
     {
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             state.Dependency = new FlipJob().ScheduleParallel(state.Dependency);

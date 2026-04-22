@@ -68,7 +68,7 @@ namespace Game.ECS
             [ReadOnly] public NativeParallelMultiHashMap<int2, int> grid;
             public float cellSize;
 
-            void Execute(
+             public void Execute(
                 Entity entity,
                 ref LocalTransform transform,
                 in BoxColliderComponent collider,

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4422774422875947570}
   - component: {fileID: 6304840561904168736}
   - component: {fileID: -1945042353579986666}
+  - component: {fileID: 1215278695957886060}
   m_Layer: 0
   m_Name: EnemyG
   m_TagString: Untagged
@@ -108,6 +109,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b2ed9a54ef41b64596388d07beadbc8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.EnemyGO
+  sourcePrefab: {fileID: 0}
+  cachedRigid: {fileID: 0}
+  cachedUnit: {fileID: 0}
+  cachedCollider: {fileID: 0}
+  cachedBaseRotation: {fileID: 0}
+  cachedDropTable: {fileID: 0}
 --- !u!114 &6089810984603116322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -134,7 +141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.UnitGO
   maxHP: 50
-  moveSpeed: 3
+  moveSpeed: 2
 --- !u!114 &6304840561904168736
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,6 +158,10 @@ MonoBehaviour:
   offset: {x: 0, y: 0}
   isStatic: 0
   isTrigger: 0
+  systemIndex: -1
+  cachedEnemyTag: {fileID: 0}
+  cachedPlayerTag: {fileID: 0}
+  cachedUnit: {fileID: 0}
 --- !u!114 &-1945042353579986666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -165,3 +176,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.DropTableGO
   prefab: {fileID: 1489557009062124992, guid: a4007bd17531d2e47bec7beb0271fdb5, type: 3}
   dropCount: 3
+--- !u!114 &1215278695957886060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4335088201849958969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8d877f32d6e59044b0a4f1237c176c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.UGO.BaseRotationGO

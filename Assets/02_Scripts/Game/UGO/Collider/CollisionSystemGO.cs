@@ -12,8 +12,6 @@ namespace Game.UGO
     {
         public const float CellSize = 2f;
 
-        // 한 콜라이더가 한 프레임에 가질 수 있는 최대 충돌 이벤트 수.
-        // ECS [InternalBufferCapacity(8)] 와 동일하게 8 로 맞춤.
         public const int MaxEventsPerCollider = 8;
 
         private static CollisionSystemGO _instance;
@@ -33,14 +31,45 @@ namespace Game.UGO
 
         private readonly List<BoxColliderGO> _colliders = new List<BoxColliderGO>(2048);
 
+        private NativeList<float3> _positions;
+        private NativeList<float2> _sizes;
+        private NativeList<float2> _offsets;
+        private NativeList<byte> _flags;
+
+        private NativeList<int> _eventCounts;
+        private NativeList<CollisionRecord> _events;
+        private NativeList<float2> _pushOffsets;
+
+        private NativeParallelMultiHashMap<int2, int> _grid;
+        private int _gridCapacity;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }
             _instance = this;
+
+            _positions = new NativeList<float3>(2048, Allocator.Persistent);
+            _sizes = new NativeList<float2>(2048, Allocator.Persistent);
+            _offsets = new NativeList<float2>(2048, Allocator.Persistent);
+            _flags = new NativeList<byte>(2048, Allocator.Persistent);
+            _eventCounts = new NativeList<int>(2048, Allocator.Persistent);
+            _events = new NativeList<CollisionRecord>(2048 * MaxEventsPerCollider, Allocator.Persistent);
+            _pushOffsets = new NativeList<float2>(2048, Allocator.Persistent);
+
+            _gridCapacity = 2048 * 4;
+            _grid = new NativeParallelMultiHashMap<int2, int>(_gridCapacity, Allocator.Persistent);
         }
 
         private void OnDestroy()
         {
+            if (_positions.IsCreated) _positions.Dispose();
+            if (_sizes.IsCreated) _sizes.Dispose();
+            if (_offsets.IsCreated) _offsets.Dispose();
+            if (_flags.IsCreated) _flags.Dispose();
+            if (_eventCounts.IsCreated) _eventCounts.Dispose();
+            if (_events.IsCreated) _events.Dispose();
+            if (_pushOffsets.IsCreated) _pushOffsets.Dispose();
+            if (_grid.IsCreated) _grid.Dispose();
             if (_instance == this) _instance = null;
         }
 
@@ -67,68 +96,74 @@ namespace Game.UGO
             int count = _colliders.Count;
             if (count == 0) return;
 
-            // 1) 데이터 패킹 (메인 스레드)
-            var positions   = new NativeArray<float3>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var sizes       = new NativeArray<float2>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var offsets     = new NativeArray<float2>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var flags       = new NativeArray<byte>  (count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            _positions.ResizeUninitialized(count);
+            _sizes.ResizeUninitialized(count);
+            _offsets.ResizeUninitialized(count);
+            _flags.ResizeUninitialized(count);
 
             for (int i = 0; i < count; i++)
             {
                 var c = _colliders[i];
-                positions[i] = c.transform.position;
-                sizes[i]     = new float2(c.size.x, c.size.y);
-                offsets[i]   = new float2(c.offset.x, c.offset.y);
+                _positions[i] = c.transform.position;
+                _sizes[i] = new float2(c.size.x, c.size.y);
+                _offsets[i] = new float2(c.offset.x, c.offset.y);
                 byte f = 0;
-                if (c.isStatic)  f |= 1;
+                if (c.isStatic) f |= 1;
                 if (c.isTrigger) f |= 2;
-                flags[i] = f;
+                _flags[i] = f;
             }
 
-            // 2) Build spatial hash (병렬)
-            var grid = new NativeParallelMultiHashMap<int2, int>(count * 4, Allocator.TempJob);
+            int requiredGridCap = count * 4;
+            if (requiredGridCap > _gridCapacity)
+            {
+                _grid.Dispose();
+                _gridCapacity = requiredGridCap;
+                _grid = new NativeParallelMultiHashMap<int2, int>(_gridCapacity, Allocator.Persistent);
+            }
+            else
+            {
+                _grid.Clear();
+            }
 
             var buildJob = new BuildGridJob
             {
-                positions = positions,
-                sizes = sizes,
-                offsets = offsets,
+                positions = _positions.AsArray(),
+                sizes = _sizes.AsArray(),
+                offsets = _offsets.AsArray(),
                 cellSize = CellSize,
-                grid = grid.AsParallelWriter()
+                grid = _grid.AsParallelWriter()
             }.Schedule(count, 64);
 
-            // 3) Detect & resolve (병렬). 결과를 NativeArray 에 기록.
-            var eventCounts = new NativeArray<int>            (count,                        Allocator.TempJob, NativeArrayOptions.ClearMemory);
-            var events      = new NativeArray<CollisionRecord>(count * MaxEventsPerCollider, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-            var pushOffsets = new NativeArray<float2>         (count,                        Allocator.TempJob, NativeArrayOptions.ClearMemory);
+            _eventCounts.Resize(count, NativeArrayOptions.ClearMemory);
+            _pushOffsets.Resize(count, NativeArrayOptions.ClearMemory);
+            _events.ResizeUninitialized(count * MaxEventsPerCollider);
 
             var detectJob = new DetectAndResolveJob
             {
-                positions = positions,
-                sizes = sizes,
-                offsets = offsets,
-                flags = flags,
-                grid = grid,
+                positions = _positions.AsArray(),
+                sizes = _sizes.AsArray(),
+                offsets = _offsets.AsArray(),
+                flags = _flags.AsArray(),
+                grid = _grid,
                 cellSize = CellSize,
                 maxEventsPerCollider = MaxEventsPerCollider,
-                eventCounts = eventCounts,
-                events = events,
-                pushOffsets = pushOffsets
+                eventCounts = _eventCounts.AsArray(),
+                events = _events.AsArray(),
+                pushOffsets = _pushOffsets.AsArray()
             }.Schedule(count, 32, buildJob);
 
             detectJob.Complete();
 
-            // 4) 결과 반영 (메인 스레드)
             for (int i = 0; i < count; i++)
             {
                 var c = _colliders[i];
                 c.events.Clear();
 
-                int n = eventCounts[i];
+                int n = _eventCounts[i];
                 int baseIdx = i * MaxEventsPerCollider;
                 for (int j = 0; j < n; j++)
                 {
-                    var rec = events[baseIdx + j];
+                    var rec = _events[baseIdx + j];
                     int otherIdx = rec.otherIndex;
                     if (otherIdx < 0 || otherIdx >= _colliders.Count) continue;
 
@@ -141,7 +176,7 @@ namespace Game.UGO
                     });
                 }
 
-                float2 push = pushOffsets[i];
+                float2 push = _pushOffsets[i];
                 if (math.lengthsq(push) > 0f)
                 {
                     var p = c.transform.position;
@@ -151,27 +186,15 @@ namespace Game.UGO
                 }
             }
 
-            // 5) 정리
-            positions.Dispose();
-            sizes.Dispose();
-            offsets.Dispose();
-            flags.Dispose();
-            grid.Dispose();
-            eventCounts.Dispose();
-            events.Dispose();
-            pushOffsets.Dispose();
         }
 
-        // -----------------------------------------------------------------
-        //  Jobs
-        // -----------------------------------------------------------------
 
         private struct CollisionRecord
         {
             public int otherIndex;
             public float2 normal;
             public float penetration;
-            public byte isTrigger; // 0/1
+            public byte isTrigger;
         }
 
         [BurstCompile]
@@ -212,7 +235,6 @@ namespace Game.UGO
             public float cellSize;
             public int maxEventsPerCollider;
 
-            // 각 콜라이더가 자신의 슬롯에만 쓰므로 race-free
             [NativeDisableParallelForRestriction] public NativeArray<int> eventCounts;
             [NativeDisableParallelForRestriction] public NativeArray<CollisionRecord> events;
             public NativeArray<float2> pushOffsets;
@@ -220,13 +242,13 @@ namespace Game.UGO
             public void Execute(int index)
             {
                 byte myFlag = flags[index];
-                bool aIsStatic  = (myFlag & 1) != 0;
+                bool aIsStatic = (myFlag & 1) != 0;
                 bool aIsTrigger = (myFlag & 2) != 0;
 
                 float2 aCenter = positions[index].xy + offsets[index];
-                float2 aHalf   = sizes[index] * 0.5f;
-                float2 aMin    = aCenter - aHalf;
-                float2 aMax    = aCenter + aHalf;
+                float2 aHalf = sizes[index] * 0.5f;
+                float2 aMin = aCenter - aHalf;
+                float2 aMax = aCenter + aHalf;
 
                 int2 minCell = (int2)math.floor(aMin / cellSize);
                 int2 maxCell = (int2)math.floor(aMax / cellSize);
@@ -247,9 +269,8 @@ namespace Game.UGO
                             if (j == index) continue;
 
                             float2 bCenter = positions[j].xy + offsets[j];
-                            float2 bHalf   = sizes[j] * 0.5f;
+                            float2 bHalf = sizes[j] * 0.5f;
 
-                            // 같은 페어를 두 셀에서 중복 검출하지 않도록 minCell 일치 셀에서만 처리
                             int2 bMinCell = (int2)math.floor((bCenter - bHalf) / cellSize);
                             int2 overlapMin = math.max(minCell, bMinCell);
                             if (cx != overlapMin.x || cy != overlapMin.y) continue;
@@ -280,7 +301,7 @@ namespace Game.UGO
                             }
 
                             byte bFlag = flags[j];
-                            bool bIsStatic  = (bFlag & 1) != 0;
+                            bool bIsStatic = (bFlag & 1) != 0;
                             bool bIsTrigger = (bFlag & 2) != 0;
                             bool isTriggerEvent = aIsTrigger || bIsTrigger;
 

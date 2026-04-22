@@ -8,6 +8,7 @@ namespace Game.ECS
     [BurstCompile]
     public partial struct PlayerSystem : ISystem
     {
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var input = SystemAPI.GetSingleton<InputData>();
