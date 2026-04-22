@@ -16,7 +16,7 @@ namespace Game.UGO
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void ResetStatics()
         {
-            _value = new PlayerInfo { needLevelUp = 10 };
+            _value = new PlayerInfo { needLevelUp = int.MaxValue };
             _initialized = false;
             OnChanged = null;
         }

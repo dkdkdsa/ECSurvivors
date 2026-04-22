@@ -23,6 +23,8 @@ namespace Game.UGO
 
         private readonly List<BulletGO> _bullets = new List<BulletGO>(2048);
 
+        public int ActiveCount => _bullets.Count;
+
         private void Awake()
         {
             if (_instance != null && _instance != this) { Destroy(gameObject); return; }

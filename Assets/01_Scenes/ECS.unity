@@ -981,6 +981,92 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1693091793}
   m_CullTransparentMesh: 1
+--- !u!1 &1711851876
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1711851879}
+  - component: {fileID: 1711851877}
+  - component: {fileID: 1711851880}
+  - component: {fileID: 1711851881}
+  m_Layer: 0
+  m_Name: Bench
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1711851877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711851876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfbfec89b33baba439ffd3dfee44560e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkRecorder
+  targetObjectCounts: 64000000f4010000e8030000881300001027000050c30000
+  category: 0
+  sampleDurationPerBucket: 2
+  perBucketTimeoutSeconds: 300
+  csvFileName: benchmark_results.csv
+  appendMode: 0
+  writeHeader: 1
+  quitOnFinish: 1
+  countProviderBehaviour: {fileID: 1711851880}
+--- !u!4 &1711851879
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711851876}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1711851880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711851876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f7913a9a61d62b4190e663417f96668, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkCountProviderECS
+--- !u!114 &1711851881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711851876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6c07798c328a74d81c0079efb7c882, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Game.Benchmark.BenchmarkHUD
+  countProviderBehaviour: {fileID: 1711851880}
+  fontSize: 20
+  margin: {x: 16, y: 16}
+  size: {x: 320, y: 180}
+  fpsSmoothing: 0.1
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
 --- !u!1 &1775001225
 GameObject:
   m_ObjectHideFlags: 0
@@ -1309,3 +1395,4 @@ SceneRoots:
   - {fileID: 1881775219}
   - {fileID: 136812979}
   - {fileID: 241788539}
+  - {fileID: 1711851879}

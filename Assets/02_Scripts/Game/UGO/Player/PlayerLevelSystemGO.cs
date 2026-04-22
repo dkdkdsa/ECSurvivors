@@ -28,7 +28,6 @@ namespace Game.UGO
 
         private void Start()
         {
-            // 첫 프레임에 brige 가 초기 상태를 받을 수 있도록 보장
             PlayerInfoHolderGO.EnsureInitialized();
         }
 
